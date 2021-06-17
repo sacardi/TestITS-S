@@ -75,8 +75,6 @@ public class EnrollmentCA implements Runnable {
 
 	private EtsiTs103097Certificate[] enrolmentCaChain;
 
-	//private EtsiTs103097Certificate rootCaCert;
-
 	private ETSITS102941MessagesCaGenerator messagesCaGenerator;
 
 	private DefaultCryptoManager cryptoManager;
@@ -111,6 +109,7 @@ public class EnrollmentCA implements Runnable {
 	@Override
 	public void run() {
 		System.out.println("Enrolment CA Server starting");
+
 		try (ServerSocket mySocket = new ServerSocket(port)) {
 			System.out.println("Waiting Enrollment CA on port " + port);
 			Socket clientSocket = mySocket.accept();
@@ -120,7 +119,6 @@ public class EnrollmentCA implements Runnable {
 			throw new IllegalStateException(e);
 
 		}
-
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
@@ -150,7 +148,7 @@ public class EnrollmentCA implements Runnable {
 	 * This method enrols a ITS station
 	 * 
 	 * @param enrolmentMSgToSendToEnrolmentCA
-	 * @return the byte[] encoded  enrolment response.
+	 * @return the byte[] encoded enrolment response.
 	 * @throws IOException
 	 * @throws IllegalArgumentException
 	 * @throws GeneralSecurityException
@@ -192,8 +190,9 @@ public class EnrollmentCA implements Runnable {
 																						// signer of the message
 		System.out.println("The inner message " + enrolmentRequestResult.getValue()); // The inner message that was
 																						// signed and or encrypted.
-	//	SecretKey key = enrolmentRequestResult.getSecretKey(); // The symmetrical key used in Ecies request operations
-																// and is set when
+		// SecretKey key = enrolmentRequestResult.getSecretKey(); // The symmetrical key
+		// used in Ecies request operations
+		// and is set when
 		// verifying all
 		InnerEcRequest msgRequest = enrolmentRequestResult.getValue();
 		byte[] itsId = msgRequest.getItsId();
@@ -215,12 +214,12 @@ public class EnrollmentCA implements Runnable {
 			ValidityPeriod enrollCertValidityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 35);
 
 			List<Integer> countries = new ArrayList<Integer>();
-			countries.add(Constants.REGION);
+			countries.add(Constants.REGION_ITALY);
 			GeographicRegion region = GeographicRegion.generateRegionForCountrys(countries);
 
-			
 			EtsiTs103097Certificate enrollmentCredential = enrollmentCredentialCertGenerator.genEnrollCredential(
-					UUID.randomUUID().toString(), // THIS IS A UNIQUE ID FOR THE CERTIFICATE THAT IT WILL BE USED BY THE AA TO CHECK IF THIS CERT IS VALID (section 6.2.3.3.1)
+					UUID.randomUUID().toString(), // THIS IS A UNIQUE ID FOR THE CERTIFICATE THAT IT WILL BE USED BY THE
+													// AA TO CHECK IF THIS CERT IS VALID (section 6.2.3.3.1)
 					enrollCertValidityPeriod, region, Hex.decode("01C0"), // SSP data set in
 																			// SecuredCertificateRequestService
 																			// appPermission, two byte, for example:

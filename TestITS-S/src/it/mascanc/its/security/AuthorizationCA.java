@@ -195,7 +195,7 @@ public class AuthorizationCA {
 		Date timeStamp = dateFormat.parse("20181202 12:12:21");
 		ValidityPeriod authTicketValidityPeriod = new ValidityPeriod(timeStamp, Duration.DurationChoices.years, 1);
 		List<Integer> countries = new ArrayList<Integer>();
-		countries.add(Constants.REGION);
+		countries.add(Constants.REGION_ITALY);
 		GeographicRegion region = GeographicRegion.generateRegionForCountrys(countries);
 		// This is the InnerEcRequest. The outer parts are Data-Signed and Encrypted.
 		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(
@@ -257,7 +257,7 @@ public class AuthorizationCA {
 		return authorizationCaChain;
 	}
 
-	public void setAuthorizationCaChain(EtsiTs103097Certificate[] authorizationCaChain) {
+	public void setAuthorizationCAChain(EtsiTs103097Certificate[] authorizationCaChain) {
 		this.authorizationCaChain = authorizationCaChain;
 	}
 

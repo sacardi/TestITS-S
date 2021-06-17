@@ -1,7 +1,7 @@
 package it.mascanc.its.security;
 
 public class Constants {
-	public final static int  REGION = 380;
+	public final static int  REGION_ITALY = 380;
 	public static final String ROOT_CA_CERTIFICATE = "root_ca_certificate";
 	
 	public static final String ENROLMENT_CA_CERTIFICATE = "ea_ca_certificate";

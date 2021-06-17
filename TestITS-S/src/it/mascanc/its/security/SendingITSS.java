@@ -119,7 +119,7 @@ import org.certificateservices.custom.c2x.ieee1609dot2.generator.recipient.Recip
  * @author max
  *
  */
-public class SendingITS {
+public class SendingITSS {
 
 	/** This is my canonical identifier. */
 	private static final String myID = UUID.randomUUID().toString();
@@ -166,7 +166,7 @@ public class SendingITS {
 	 * @throws IllegalArgumentException
 	 * @throws ParseException
 	 */
-	public SendingITS() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
+	public SendingITSS() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
 			SignatureException, IOException, BadCredentialsException, ParseException {
 		// Create a crypto manager in charge of communicating with underlying
 		// cryptographic components
@@ -189,7 +189,7 @@ public class SendingITS {
 		encAlg = BasePublicEncryptionKey.BasePublicEncryptionKeyChoices.ecdsaNistP256;
 
 		List<Integer> countries = new ArrayList<Integer>();
-		countries.add(Constants.REGION);
+		countries.add(Constants.REGION_ITALY);
 		region = GeographicRegion.generateRegionForCountrys(countries);
 
 		enrolmentCredentialSignKeys = cryptoManager.generateKeyPair(ecdsaNistP256);
