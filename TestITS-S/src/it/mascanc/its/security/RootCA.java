@@ -1,9 +1,6 @@
 package it.mascanc.its.security;
 
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -45,11 +42,11 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Validit
 public class RootCA implements Runnable {
 	public static final int port = 8886;
 
-	private EtsiTs103097Certificate rootCACertificate;
+	private EtsiTs103097Certificate rootCaCertificate;
 
-	private KeyPair rootCASigningKeys;
+	private KeyPair rootCaSigningKeys;
 
-	private KeyPair rootCAEncryptionKeys;
+	private KeyPair rootCaEncryptionKeys;
 
 	private Ieee1609Dot2CryptoManager cryptoManager;
 
@@ -58,27 +55,28 @@ public class RootCA implements Runnable {
 	private EtsiTs103097Certificate enrolmentCaCertificate;
 
 	// Crypto stuff for the ENROLMENT CA
-	private KeyPair enrollmentCAEncryptionKeys;
+	private KeyPair enrollmentCaEncryptionKeys;
 
-	private KeyPair enrollmentCASigningKeys;
+	private KeyPair enrollmentCaSigningKeys;
 
-	private EtsiTs103097Certificate enrollmentCACertificate;
+	private EtsiTs103097Certificate enrollmentCaCertificate;
 
-	private EtsiTs103097Certificate[] enrollmentCAChain;
+	private EtsiTs103097Certificate[] enrollmentCaChain;
 
 	// Crypto stuff for the AUTHORIZATION CA
-	private KeyPair authorizationCAEncryptionKeys;
+	private KeyPair authorizationCaEncryptionKeys;
 
-	private KeyPair authorizationCASigningKeys;
+	private KeyPair authorizationCaSigningKeys;
 
-	private EtsiTs103097Certificate authorizationCACertificate;
+	private EtsiTs103097Certificate authorizationCaCertificate;
 
 	private EtsiTs103097Certificate[] authorizationCAChain;
 
 	private GeographicRegion geographicRegion;
 
 	// Set the Root CA according with ETSI 103 097
-	public RootCA() throws IllegalArgumentException, SignatureException, IOException {
+	public RootCA() throws IllegalArgumentException, SignatureException, IOException, InvalidKeyException,
+			NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
 
 		init();
 
@@ -93,40 +91,35 @@ public class RootCA implements Runnable {
 		// not used
 	}
 
-	private void init() {
+	private void init() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
+			SignatureException, IOException, BadCredentialsException, InvalidKeyException {
 		setupCryptoManager();
 
-		setRegionToItaly();
+		setGeographicRegionToItaly();
 
 		generateCertificateKeyPairs();
 	}
 
-	private void setupCryptoManager() {
+	private void setupCryptoManager() throws IllegalArgumentException, NoSuchAlgorithmException,
+			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
 		// Create a crypto manager in charge of communicating with underlying
 		// cryptographic components
 		this.cryptoManager = new DefaultCryptoManager();
 		// Initialize the crypto manager to use soft keys using the bouncy castle
 		// cryptographic provider.
-		try {
-			this.cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
-		} catch (Exception e) {
-			System.out.println("Exception with setupCryptoManager: " + e);
-		}
-
+		this.cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
 		setAuthorityGenerator();
 	}
 
-	private void setAuthorityGenerator() {
-		try {
-			// Create an authority certificate generator and initialize it with the crypto
-			// manager.
-			this.authorityCertGenerator = new ETSIAuthorityCertGenerator(cryptoManager);
-		} catch (SignatureException e) {
-			System.out.println("Exception with setupCryptoManager: " + e);
-		}
+	private void setAuthorityGenerator() throws SignatureException {
+		// Create an authority certificate generator and initialize it with the crypto
+		// manager.
+		if (this.cryptoManager == null)
+			throw new NullPointerException();
+		this.authorityCertGenerator = new ETSIAuthorityCertGenerator(this.cryptoManager);
 	}
 
-	private void setRegionToItaly() {
+	private void setGeographicRegionToItaly() {
 		// this is defined in IEEE Std 1609. For italy we have:
 		// https://www.iso.org/obp/ui/#iso:code:3166:IT
 
@@ -135,22 +128,18 @@ public class RootCA implements Runnable {
 		this.geographicRegion = GeographicRegion.generateRegionForCountrys(countries);
 	}
 
-	private void generateCertificateKeyPairs() {
-		try {
-			// Root CA Keys
-			this.rootCASigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
-			this.rootCAEncryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
+	private void generateCertificateKeyPairs() throws InvalidKeyException, IllegalArgumentException, IOException {
+		// Root CA Keys
+		this.rootCaSigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
+		this.rootCaEncryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
 
-			// Enrollment CA Keys
-			this.enrollmentCASigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
-			this.enrollmentCAEncryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
+		// Enrollment CA Keys
+		this.enrollmentCaSigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
+		this.enrollmentCaEncryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
 
-			// CA Keys
-			this.authorizationCASigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
-			this.authorizationCAEncryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
-		} catch (Exception e) {
-			System.out.println("Exception with generateKeyPairs: " + e);
-		}
+		// Authorization CA Keys
+		this.authorizationCaSigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
+		this.authorizationCaEncryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
 	}
 
 	/**
@@ -202,20 +191,20 @@ public class RootCA implements Runnable {
 		// - 0 unused
 		// - 0 unused
 		// - 0 unused
-		byte[] cTLServiceSpecificPermissions_canSignCTLwith_EA_AA_DC = Hex.decode("0138");
+		byte[] ctlServiceSpecificPermissions_canSignCtlWith_EA_AA_DC_entries = Hex.decode("0138");
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
-		PublicKey verificationPublicKey = rootCASigningKeys.getPublic();
-		PrivateKey signingPrivateKey = rootCASigningKeys.getPrivate();
+		PublicKey verificationPublicKey = this.rootCaSigningKeys.getPublic();
+		PrivateKey signingPrivateKey = this.rootCaSigningKeys.getPrivate();
 		SymmAlgorithm symmetricEncryptionAlgorithm = SymmAlgorithm.aes128Ccm;
 		BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm = BasePublicEncryptionKeyChoices.ecdsaNistP256;
-		PublicKey encryptionPublicKey = rootCAEncryptionKeys.getPublic();
+		PublicKey encryptionPublicKey = rootCaEncryptionKeys.getPublic();
 
-		rootCACertificate = authorityCertGenerator.genRootCA(cAName, //
+		this.rootCaCertificate = this.authorityCertGenerator.genRootCA(cAName, //
 				rootCAValidityPeriod, //
 				this.geographicRegion, //
 				minChainDepth, //
 				chainDepthRange, //
-				cTLServiceSpecificPermissions_canSignCTLwith_EA_AA_DC, //
+				ctlServiceSpecificPermissions_canSignCtlWith_EA_AA_DC_entries, //
 				signingPublicKeyAlgorithm, //
 				verificationPublicKey, //
 				signingPrivateKey, //
@@ -243,16 +232,16 @@ public class RootCA implements Runnable {
 		ValidityPeriod enrollmentCAValidityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 37);
 		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
-		PublicKey verificationPublicKey = enrollmentCASigningKeys.getPublic();
-		EtsiTs103097Certificate signerCertificate = this.rootCACertificate;
-		PublicKey signerCertificatePublicKey = rootCASigningKeys.getPublic();
-		PrivateKey signerCertificatePrivateKey = rootCASigningKeys.getPrivate();
+		PublicKey verificationPublicKey = this.enrollmentCaSigningKeys.getPublic();
+		EtsiTs103097Certificate signerCertificate = this.rootCaCertificate;
+		PublicKey signerCertificatePublicKey = this.rootCaSigningKeys.getPublic();
+		PrivateKey signerCertificatePrivateKey = this.rootCaSigningKeys.getPrivate();
 		SymmAlgorithm symmetricEncryptionAlgorithm = SymmAlgorithm.aes128Ccm;
 		BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm = BasePublicEncryptionKeyChoices.ecdsaNistP256;
-		PublicKey encryptionPublicKey = enrollmentCAEncryptionKeys.getPublic();
+		PublicKey encryptionPublicKey = this.enrollmentCaEncryptionKeys.getPublic();
 
 		// Generate a reference to the Enrollment CA Signing Keys
-		enrollmentCACertificate = authorityCertGenerator.genEnrollmentCA(eAName, //
+		this.enrollmentCaCertificate = this.authorityCertGenerator.genEnrollmentCA(eAName, //
 				enrollmentCAValidityPeriod, //
 				this.geographicRegion, //
 				subjectAssurance, //
@@ -265,7 +254,7 @@ public class RootCA implements Runnable {
 				publicKeyEncryptionAlgorithm, //
 				encryptionPublicKey //
 		);
-		this.enrollmentCAChain = new EtsiTs103097Certificate[] { enrollmentCACertificate, rootCACertificate };
+		this.enrollmentCaChain = new EtsiTs103097Certificate[] { this.enrollmentCaCertificate, this.rootCaCertificate };
 
 		System.out.println("Created Enrolment CA certificate");
 	}
@@ -276,18 +265,18 @@ public class RootCA implements Runnable {
 		ValidityPeriod authorityCAValidityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 15);
 		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
-		PublicKey verificationPublicKey = authorizationCASigningKeys.getPublic();
-		EtsiTs103097Certificate signerCertificate = this.rootCACertificate;
-		PublicKey signerCertificatePublicKey = rootCASigningKeys.getPublic();
-		PrivateKey signerCertificatePrivateKey = rootCASigningKeys.getPrivate();
+		PublicKey verificationPublicKey = this.authorizationCaSigningKeys.getPublic();
+		EtsiTs103097Certificate signerCertificate = this.rootCaCertificate;
+		PublicKey signerCertificatePublicKey = this.rootCaSigningKeys.getPublic();
+		PrivateKey signerCertificatePrivateKey = this.rootCaSigningKeys.getPrivate();
 		SymmAlgorithm symmetricEncryptionAlgorithm = SymmAlgorithm.aes128Ccm;
 		BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm = BasePublicEncryptionKeyChoices.ecdsaNistP256;
-		PublicKey encryptionPublicKey = authorizationCAEncryptionKeys.getPublic();
+		PublicKey encryptionPublicKey = this.authorizationCaEncryptionKeys.getPublic();
 
 		// Generate a reference to the Authorization CA Signing Keys
-		authorizationCACertificate = authorityCertGenerator.genAuthorizationCA(aAName, //
+		this.authorizationCaCertificate = this.authorityCertGenerator.genAuthorizationCA(aAName, //
 				authorityCAValidityPeriod, //
-				geographicRegion, //
+				this.geographicRegion, //
 				subjectAssurance, //
 				signingPublicKeyAlgorithm, //
 				verificationPublicKey, //
@@ -298,45 +287,46 @@ public class RootCA implements Runnable {
 				publicKeyEncryptionAlgorithm, //
 				encryptionPublicKey //
 		);
-		this.authorizationCAChain = new EtsiTs103097Certificate[] { authorizationCACertificate, rootCACertificate };
+		this.authorizationCAChain = new EtsiTs103097Certificate[] { this.authorizationCaCertificate,
+				this.rootCaCertificate };
 
 		System.out.println("Created Authorization CA certificate");
 	}
 
-	public EtsiTs103097Certificate getRootCACertificate() {
-		return this.rootCACertificate;
+	public EtsiTs103097Certificate getRootCaCertificate() {
+		return this.rootCaCertificate;
 	}
 
-	public KeyPair getEnrollmentCAEncryptionKeys() {
-		return enrollmentCAEncryptionKeys;
+	public KeyPair getEnrollmentCaEncryptionKeys() {
+		return enrollmentCaEncryptionKeys;
 	}
 
 	public void setEnrollmentCAEncryptionKeys(KeyPair enrollmentCAEncryptionKeys) {
-		this.enrollmentCAEncryptionKeys = enrollmentCAEncryptionKeys;
+		this.enrollmentCaEncryptionKeys = enrollmentCAEncryptionKeys;
 	}
 
 	public EtsiTs103097Certificate getMyCertificate() {
-		return rootCACertificate;
+		return rootCaCertificate;
 	}
 
 	public void setMyCertificate(EtsiTs103097Certificate myCertificate) {
-		this.rootCACertificate = myCertificate;
+		this.rootCaCertificate = myCertificate;
 	}
 
 	public KeyPair getRootCASigningKeys() {
-		return rootCASigningKeys;
+		return rootCaSigningKeys;
 	}
 
 	public void setRootCASigningKeys(KeyPair rootCASigningKeys) {
-		this.rootCASigningKeys = rootCASigningKeys;
+		this.rootCaSigningKeys = rootCASigningKeys;
 	}
 
 	public KeyPair getRootCAEncryptionKeys() {
-		return rootCAEncryptionKeys;
+		return rootCaEncryptionKeys;
 	}
 
 	public void setRootCAEncryptionKeys(KeyPair rootCAEncryptionKeys) {
-		this.rootCAEncryptionKeys = rootCAEncryptionKeys;
+		this.rootCaEncryptionKeys = rootCAEncryptionKeys;
 	}
 
 	public Ieee1609Dot2CryptoManager getCryptoManager() {
@@ -355,59 +345,59 @@ public class RootCA implements Runnable {
 		this.enrolmentCaCertificate = enrolmentCaCertificate;
 	}
 
-	public KeyPair getEnrollmentCASigningKeys() {
-		return enrollmentCASigningKeys;
+	public KeyPair getEnrollmentCaSigningKeys() {
+		return enrollmentCaSigningKeys;
 	}
 
 	public void setEnrollmentCASigningKeys(KeyPair enrollmentCASigningKeys) {
-		this.enrollmentCASigningKeys = enrollmentCASigningKeys;
+		this.enrollmentCaSigningKeys = enrollmentCASigningKeys;
 	}
 
-	public EtsiTs103097Certificate getEnrollmentCACertificate() {
-		return enrollmentCACertificate;
+	public EtsiTs103097Certificate getEnrollmentCaCertificate() {
+		return enrollmentCaCertificate;
 	}
 
 	public void setEnrollmentCACertificate(EtsiTs103097Certificate enrollmentCACertificate) {
-		this.enrollmentCACertificate = enrollmentCACertificate;
+		this.enrollmentCaCertificate = enrollmentCACertificate;
 	}
 
-	public EtsiTs103097Certificate[] getEnrollmentCAChain() {
-		return enrollmentCAChain;
+	public EtsiTs103097Certificate[] getEnrollmentCaChain() {
+		return enrollmentCaChain;
 	}
 
 	public void setEnrollmentCAChain(EtsiTs103097Certificate[] enrollmentCAChain) {
-		this.enrollmentCAChain = enrollmentCAChain;
+		this.enrollmentCaChain = enrollmentCAChain;
 	}
 
 	public static int getPort() {
 		return port;
 	}
 
-	public KeyPair getAuthorizationCAEncryptionKeys() {
-		return authorizationCAEncryptionKeys;
+	public KeyPair getAuthorizationCaEncryptionKeys() {
+		return authorizationCaEncryptionKeys;
 	}
 
 	public void setAuthorizationCAEncryptionKeys(KeyPair authorizationCAEncryptionKeys) {
-		this.authorizationCAEncryptionKeys = authorizationCAEncryptionKeys;
+		this.authorizationCaEncryptionKeys = authorizationCAEncryptionKeys;
 	}
 
-	public KeyPair getAuthorizationCASigningKeys() {
-		return authorizationCASigningKeys;
+	public KeyPair getAuthorizationCaSigningKeys() {
+		return authorizationCaSigningKeys;
 	}
 
 	public void setAuthorizationCASigningKeys(KeyPair authorizationCASigningKeys) {
-		this.authorizationCASigningKeys = authorizationCASigningKeys;
+		this.authorizationCaSigningKeys = authorizationCASigningKeys;
 	}
 
-	public EtsiTs103097Certificate getAuthorizationCACertificate() {
-		return authorizationCACertificate;
+	public EtsiTs103097Certificate getAuthorizationCaCertificate() {
+		return authorizationCaCertificate;
 	}
 
 	public void setAuthorizationCACertificate(EtsiTs103097Certificate authorizationCACertificate) {
-		this.authorizationCACertificate = authorizationCACertificate;
+		this.authorizationCaCertificate = authorizationCACertificate;
 	}
 
-	public EtsiTs103097Certificate[] getAuthorizationCAChain() {
+	public EtsiTs103097Certificate[] getAuthorizationCaChain() {
 		return authorizationCAChain;
 	}
 

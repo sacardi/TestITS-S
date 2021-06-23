@@ -42,6 +42,7 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashAlg
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSsp;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PublicVerificationKey.PublicVerificationKeyChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature.SignatureChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SubjectAssurance;
@@ -53,9 +54,8 @@ import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Certif
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Receiver;
 
 /**
- * Simulates an authorization CA. 
- * They are defined in section 7.2.4, Subordinate certification authority
- * certificates.
+ * Simulates an authorization CA. They are defined in section 7.2.4, Subordinate
+ * certification authority certificates.
  * 
  * @author max
  *
@@ -64,7 +64,7 @@ public class AuthorizationCA {
 	public static final int port = 8888;
 
 	// these are the enrolled SITS
-	private static final HashMap<String, EtsiTs103097Certificate> SITS = new HashMap<String, EtsiTs103097Certificate>();
+	private static HashMap<String, EtsiTs103097Certificate> SendingItsStations = new HashMap<String, EtsiTs103097Certificate>();
 
 	// Stuff that I need for the crypto.
 	private EtsiTs103097Certificate myCertificate;
@@ -89,7 +89,7 @@ public class AuthorizationCA {
 
 	private PublicVerificationKeyChoices signAlg;
 
-	private BasePublicEncryptionKeyChoices encAlg;
+	private BasePublicEncryptionKeyChoices encryptionAlgorithm;
 
 	private PublicKey authTicketSignKeysPublicKey;
 
@@ -101,30 +101,39 @@ public class AuthorizationCA {
 
 	public AuthorizationCA() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
 			SignatureException, IOException, BadCredentialsException {
-		/*
-		 * Set the Root CA according with ETSI 103 097
-		 */
+		init();
+	}
 
+	private void init() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
+			SignatureException, IOException, BadCredentialsException {
+		setupCryptoManager();
+
+		setCaMessagesGenerator();
+
+		this.signAlg = ecdsaNistP256;
+		this.encryptionAlgorithm = BasePublicEncryptionKey.BasePublicEncryptionKeyChoices.ecdsaNistP256;
+	}
+
+	private void setupCryptoManager() throws IllegalArgumentException, NoSuchAlgorithmException,
+			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
 		// Create a crypto manager in charge of communicating with underlying
 		// cryptographic components
-		cryptoManager = new DefaultCryptoManager();
+		this.cryptoManager = new DefaultCryptoManager();
 		// Initialize the crypto manager to use soft keys using the bouncy castle
 		// cryptographic provider.
-		cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
+		this.cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
+	}
+
+	private void setCaMessagesGenerator() throws SignatureException {
+		int versionToGenerate = Ieee1609Dot2Data.DEFAULT_VERSION;
+		HashAlgorithm digestAlgorithm = HashAlgorithm.sha256;
+		SignatureChoices signatureScheme = Signature.SignatureChoices.ecdsaNistP256Signature;
 
 		// Create a ETSITS102941MessagesCaGenerator generator
-		messagesCaGenerator = new ETSITS102941MessagesCaGenerator(Ieee1609Dot2Data.DEFAULT_VERSION, cryptoManager, // The
-																													// initialized
-																													// crypto
-																													// manager
-																													// to
-																													// use.
-				HashAlgorithm.sha256, // digest algorithm to use.
-				Signature.SignatureChoices.ecdsaNistP256Signature, // define which signature scheme to use.
-				false); // If EC points should be represented as uncompressed.
-
-		signAlg = ecdsaNistP256;
-		encAlg = BasePublicEncryptionKey.BasePublicEncryptionKeyChoices.ecdsaNistP256;
+		messagesCaGenerator = new ETSITS102941MessagesCaGenerator(versionToGenerate, //
+				this.cryptoManager, //
+				digestAlgorithm, //
+				signatureScheme);
 
 	}
 
@@ -145,88 +154,102 @@ public class AuthorizationCA {
 	public byte[] authorize(byte[] authorizationMsgToSendToAuthorizationCA)
 			throws IllegalArgumentException, IOException, MessageParsingException, SignatureVerificationException,
 			DecryptionFailedException, InternalErrorException, GeneralSecurityException, ParseException {
-		EtsiTs103097DataEncryptedUnicast req = new EtsiTs103097DataEncryptedUnicast(
+		EtsiTs103097DataEncryptedUnicast authorizationTicketRequest = new EtsiTs103097DataEncryptedUnicast(
 				authorizationMsgToSendToAuthorizationCA);
-
-		/*
-		 * To verify an AuthorizationRequest use the following code.
-		 */
 		// Build a recipient store for Authorization Authority
-		Map<HashedId8, Receiver> authorizationCAReceipients = messagesCaGenerator.buildRecieverStore(
-				new Receiver[] { new CertificateReciever(encryptionKeys.getPrivate(), myCertificate) });
+		Map<HashedId8, Receiver> authorizationCAReceipients = this.messagesCaGenerator.buildRecieverStore(
+				new Receiver[] { new CertificateReciever(this.encryptionKeys.getPrivate(), this.myCertificate) });
 
 		// To decrypt the message and verify the external POP signature (not the inner
 		// eCSignature signed for EA CA).
-		RequestVerifyResult<InnerAtRequest> authRequestResult = messagesCaGenerator
-				.decryptAndVerifyAuthorizationRequestMessage(req, true, // Expect AuthorizationRequestPOP content
-						authorizationCAReceipients); // Receivers able to decrypt the message
+		boolean expectPoP = true;
+		RequestVerifyResult<InnerAtRequest> verificationResult = this.messagesCaGenerator
+				.decryptAndVerifyAuthorizationRequestMessage(//
+						authorizationTicketRequest, //
+						expectPoP, //
+						authorizationCAReceipients);
+
 		// The AuthorizationRequestData contains the innerAtRequest and calculated
 		// requestHash
-		InnerAtRequest innerAtRequest = authRequestResult.getValue();
+		InnerAtRequest innerAtRequest = verificationResult.getValue();
 		System.out.println("Got an authorization request from "
 				+ innerAtRequest.getSharedAtRequest().getRequestedSubjectAttributes().getId());
 
-//		// // There exists another method to decrypt (if privacy is used) and verify
-//		// inner ecSignature with:
-//		Map<HashedId8, Certificate> trustStore = messagesCaGenerator
-//		.buildCertStore(new EtsiTs103097Certificate[] { rootCaCert });
-//		
-//		// This means that the Authorization CA knows the Enrolment CA keys. 
-//        Map<HashedId8, Certificate> enrolCredCertStore = messagesCaGenerator.buildCertStore(
-//        		enrollmentCredCertChain);
-//
-//        Map<HashedId8, Receiver> enrolCAReceipients = messagesCaGenerator.buildRecieverStore(
-//        		new Receiver[] {new CertificateReciever(enrolCAEncKeys.getPrivate(),enrolmentCACert)});
-
-//       VerifyResult<EcSignature> ecSignatureVerifyResult = messagesCaGenerator.decryptAndVerifyECSignature(innerAtRequest.getEcSignature(),
-//               innerAtRequest.getSharedAtRequest(),
-//               true,
-//               enrolCredCertStore, // Certificate store to verify the signing enrollment credential
-//               trustStore,
-//               enrolCAReceipients); // the EA certificate used to decrypt the inner message.
-//
-//       // The verified and decrypted (if withPrivacy) eCSignature is retrived with
-//       EcSignature ecSignature = ecSignatureVerifyResult.getValue();
-       
 		// Ok, qui ho da fare il check sui permessi, ci saranno access control.
 
-		ETSIAuthorizationTicketGenerator eatg = new ETSIAuthorizationTicketGenerator(cryptoManager);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-		Date timeStamp = dateFormat.parse("20181202 12:12:21");
-		ValidityPeriod authTicketValidityPeriod = new ValidityPeriod(timeStamp, Duration.DurationChoices.years, 1);
-		List<Integer> countries = new ArrayList<Integer>();
-		countries.add(Constants.REGION_ITALY);
-		GeographicRegion region = GeographicRegion.generateRegionForCountrys(countries);
+		ValidityPeriod authorizationTicketValidityPeriod = setValidityPeriodForAuthorizationTicket();
+
+		GeographicRegion region = setRegionToItaly();
+
 		// This is the InnerEcRequest. The outer parts are Data-Signed and Encrypted.
 		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(
 				ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.opaque, Hex.decode("0132")));
 		PsidSsp[] appPermissions = new PsidSsp[] { appPermCertMan };
-		
-		
 
-		EtsiTs103097Certificate authTicketCert = eatg.genAuthorizationTicket(authTicketValidityPeriod, region,
-				new SubjectAssurance(2, 1), appPermissions, signAlg, 
-				authTicketSignKeysPublicKey,
-				myCertificate, signingKeys.getPublic(), signingKeys.getPrivate(), SymmAlgorithm.aes128Ccm, encAlg,
-				authTicketEncKeysPublicKey);
+		EtsiTs103097Certificate authorizationTicketCertificate = generateAuthorizationTicketCertificate(
+				authorizationTicketValidityPeriod, region, appPermissions);
 
-		InnerAtResponse innerAtResponse = new InnerAtResponse(authRequestResult.getRequestHash(),
-				AuthorizationResponseCode.ok, authTicketCert);
+		// TODO: where is the call to the EA (and relative response)?
+		EtsiTs103097DataEncryptedUnicast authResponseMessage = generateAuthorizationResponse(verificationResult,
+				authorizationTicketCertificate);
+
+		return authResponseMessage.getEncoded();
+	}
+
+	private EtsiTs103097DataEncryptedUnicast generateAuthorizationResponse(
+			RequestVerifyResult<InnerAtRequest> verificationResult,
+			EtsiTs103097Certificate authorizationTicketCertificate) throws IOException, GeneralSecurityException {
+		InnerAtResponse innerAtResponse = new InnerAtResponse(verificationResult.getRequestHash(),
+				AuthorizationResponseCode.ok, authorizationTicketCertificate);
+
 		EtsiTs103097DataEncryptedUnicast authResponseMessage = messagesCaGenerator.genAuthorizationResponseMessage(
 				new Time64(new Date()), // generation Time
 				innerAtResponse, authorizationCaChain, // The AA certificate chain signing the message
 				signingKeys.getPrivate(), SymmAlgorithm.aes128Ccm, // Encryption algorithm used.
-				authRequestResult.getSecretKey()); // The symmetric key generated in the request.
-		return authResponseMessage.getEncoded();
-
+				verificationResult.getSecretKey()); // The symmetric key generated in the request.
+		return authResponseMessage;
 	}
 
-	
+	private EtsiTs103097Certificate generateAuthorizationTicketCertificate(
+			ValidityPeriod authorizationTicketValidityPeriod, GeographicRegion region, PsidSsp[] appPermissions)
+			throws SignatureException, IOException {
+		ETSIAuthorizationTicketGenerator authorizationTicketGenerator = new ETSIAuthorizationTicketGenerator(
+				this.cryptoManager);
+
+		EtsiTs103097Certificate authorizationTicketCertificate = authorizationTicketGenerator.genAuthorizationTicket(//
+				authorizationTicketValidityPeriod, //
+				region, //
+				new SubjectAssurance(2, 1), //
+				appPermissions, //
+				signAlg, //
+				authTicketSignKeysPublicKey, //
+				myCertificate, //
+				signingKeys.getPublic(), //
+				signingKeys.getPrivate(), //
+				SymmAlgorithm.aes128Ccm, //
+				encryptionAlgorithm, //
+				authTicketEncKeysPublicKey);
+		return authorizationTicketCertificate;
+	}
+
+	private GeographicRegion setRegionToItaly() {
+		List<Integer> countries = new ArrayList<Integer>();
+		countries.add(Constants.REGION_ITALY);
+		GeographicRegion region = GeographicRegion.generateRegionForCountrys(countries);
+		return region;
+	}
+
+	private ValidityPeriod setValidityPeriodForAuthorizationTicket() throws ParseException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+		Date timeStamp = dateFormat.parse("20181202 12:12:21");
+		ValidityPeriod authorizationTicketValidityPeriod = new ValidityPeriod(timeStamp, Duration.DurationChoices.years,
+				1);
+		return authorizationTicketValidityPeriod;
+	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
 		System.out.println("Authorization CA: obtained cert " + cert);
 		this.myCertificate = cert;
-
 	}
 
 	public EtsiTs103097Certificate getMyCertificate() {
@@ -257,7 +280,7 @@ public class AuthorizationCA {
 		return authorizationCaChain;
 	}
 
-	public void setAuthorizationCAChain(EtsiTs103097Certificate[] authorizationCaChain) {
+	public void setAuthorizationCaChain(EtsiTs103097Certificate[] authorizationCaChain) {
 		this.authorizationCaChain = authorizationCaChain;
 	}
 
@@ -282,25 +305,8 @@ public class AuthorizationCA {
 	}
 
 	public static HashMap<String, EtsiTs103097Certificate> getSits() {
-		return SITS;
+		return SendingItsStations;
 	}
-
-//	public void setRootCaCert(EtsiTs103097Certificate rootCa) {
-//		this.rootCaCert = rootCa;
-//
-//	}
-//
-//	public void setEnrollmentCredCertChain(EtsiTs103097Certificate[] enrollmentCredCertChain) {
-//		this.enrollmentCredCertChain = enrollmentCredCertChain;
-//	}
-//
-//	public void setEnrolCAEncKeys(KeyPair enrolCAEncKeys) {
-//		this.enrolCAEncKeys = enrolCAEncKeys;
-//	}
-//
-//	public void setEnrolmentCACert(Certificate enrolmentCACert) {
-//		this.enrolmentCACert = enrolmentCACert;
-//	}
 
 	public void setAuthTicketSignKeysPublicKey(PublicKey authTicketSignKeysPublicKey) {
 		this.authTicketSignKeysPublicKey = authTicketSignKeysPublicKey;

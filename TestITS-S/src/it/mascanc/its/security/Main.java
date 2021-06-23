@@ -27,10 +27,8 @@ public class Main {
 	 * @param args
 	 * @throws Exception 
 	 */
-	public static void main(String[] args)
-			throws Exception {
+	public static void main(String[] args) throws Exception {
 
-		
 		PKIEntities pki = new PKIEntities();
 		pki.createAuthorities();
 		
@@ -51,9 +49,6 @@ public class Main {
 		}
 		System.out.println("Received: " + received);
 		System.out.println("Closing everything");
-		
-		pki.rest_of_the_code();
-
 
 	}
 

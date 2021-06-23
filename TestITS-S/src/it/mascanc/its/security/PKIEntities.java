@@ -1,135 +1,128 @@
 package it.mascanc.its.security;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.text.ParseException;
+
+import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
+import org.certificateservices.custom.c2x.etsits102941.v131.DecryptionFailedException;
+import org.certificateservices.custom.c2x.etsits102941.v131.InternalErrorException;
+import org.certificateservices.custom.c2x.etsits102941.v131.MessageParsingException;
+import org.certificateservices.custom.c2x.etsits102941.v131.SignatureVerificationException;
+
 public class PKIEntities {
 
-	public RootCA rootCA;
-	public EnrollmentCA enrollmentCA;
-	public AuthorizationCA authorizationCA;
-	public SendingITSS sits;
-	public ReceivingITS ritss;
+	private RootCA rootCA;
+	private EnrolmentCA enrolmentCA;
+	private AuthorizationCA authorizationCA;
+	private SendingITSS sendingItsStation;
+	private ReceivingITS receivingItsStation;
 
 	public PKIEntities() {
 	}
 
-	public void createAuthorities() {
-		try {
-			createRootCA();
-			createEnrollmentCA();
-			createAuthorizationCA();
-		} catch (Exception e) {
-			System.out.println("Exception during CA initialization:" + e);
-			System.exit(1);
-		}
+	public void createAuthorities() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
+			SignatureException, IOException, BadCredentialsException, InvalidKeyException {
+		createRootCA();
+		createEnrolmentCA();
+		createAuthorizationCA();
 	}
 
-	private void createRootCA() throws Exception {
+	private void createRootCA() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
+			BadCredentialsException, IllegalArgumentException, SignatureException, IOException {
 		rootCA = new RootCA();
 	}
 
-	private void createEnrollmentCA() throws Exception {
-		enrollmentCA = new EnrollmentCA();
+	private void createEnrolmentCA() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
+			SignatureException, IOException, BadCredentialsException {
+		enrolmentCA = new EnrolmentCA();
 
-		enrollmentCA.setCertificate(rootCA.getEnrollmentCACertificate());
-		enrollmentCA.setSigningKeys(rootCA.getEnrollmentCASigningKeys());
-		enrollmentCA.setEncrptionKeys(rootCA.getEnrollmentCAEncryptionKeys());
-		enrollmentCA.setEnrolmentCAChain(rootCA.getEnrollmentCAChain());
+		enrolmentCA.setCertificate(rootCA.getEnrollmentCaCertificate());
+		enrolmentCA.setSigningKeys(rootCA.getEnrollmentCaSigningKeys());
+		enrolmentCA.setEncrptionKeys(rootCA.getEnrollmentCaEncryptionKeys());
+		enrolmentCA.setEnrolmentCaChain(rootCA.getEnrollmentCaChain());
 	}
 
-	private void createAuthorizationCA() throws Exception {
+	private void createAuthorizationCA() throws IllegalArgumentException, NoSuchAlgorithmException,
+			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
 		authorizationCA = new AuthorizationCA();
 
-		authorizationCA.setCertificate(rootCA.getAuthorizationCACertificate());
-		authorizationCA.setSigningKeys(rootCA.getAuthorizationCASigningKeys());
-		authorizationCA.setEncryptionKeys(rootCA.getAuthorizationCAEncryptionKeys());
-		authorizationCA.setAuthorizationCAChain(rootCA.getAuthorizationCAChain());
-	}
-
-	public void rest_of_the_code() {
-		try {
-
-			/*
-			 * Now, if I am here without any exception, I am ready to send a message
-			 */
-			byte[] cam = sits.sendCAMMessage("Ciao".getBytes());
-
-			ReceivingITS ritss = new ReceivingITS();
-			ritss.setAuthorityCACertificate(authorizationCA.getCertificate());
-			ritss.setRootCACertificate(rootCA.getMyCertificate());
-			String received = ritss.receive(cam);
-			System.out.println("Received: " + received);
-			System.out.println("Closing everything");
-		} catch (Exception e) {
-			System.out.println(e);
-		}
+		authorizationCA.setCertificate(rootCA.getAuthorizationCaCertificate());
+		authorizationCA.setSigningKeys(rootCA.getAuthorizationCaSigningKeys());
+		authorizationCA.setEncryptionKeys(rootCA.getAuthorizationCaEncryptionKeys());
+		authorizationCA.setAuthorizationCaChain(rootCA.getAuthorizationCaChain());
 	}
 
 	public SendingITSS createSendingITSS() throws Exception {
-		// TODO Auto-generated method stub
-		/*
-		 * The security lifecycle of an ITS-S is Before init Initialisation and
-		 * Unenrolled Enrolled and Unauthorised Authorised for service End of life
-		 * 
-		 * This is defined in page 12 of ETSI TS 102 941 v 1.3.1
-		 * 
-		 */
+
+		// The security lifecycle of an ITS-S is:
+		// Before init
+		// Initialisation and Unenrolled
+		// Enrolled and Unauthorised
+		// Authorised for service
+		// End of life
+		//
+		// This is defined in page 12 of ETSI TS 102 941 v 1.3.1
 
 		// This is the sending ITS-S (e.g., a RSE)
-		try {
-			this.sits = new SendingITSS();
-		} catch (Exception e) {
-			System.out.println("Exception during initialization of sending ITS-S:");
-			System.out.println(e);
-			System.exit(1);
-		}
-		sits.setEnrolmentCaCert(enrollmentCA.getCertificate());
-		sits.setAuthorizationCaCert(authorizationCA.getCertificate());
-		sits.setRootCACert(rootCA.getRootCACertificate());
+		this.sendingItsStation = new SendingITSS();
+
+		this.sendingItsStation.setEnrolmentCaCert(enrolmentCA.getCertificate());
+		this.sendingItsStation.setAuthorizationCaCert(authorizationCA.getCertificate());
+		this.sendingItsStation.setRootCaCert(rootCA.getRootCaCertificate());
 
 		// Devo dare all'enrolment CA la mia chiave pubblica. Le credenziali sono create
 		// dal manufacturer
 		// e passate tramite un canale sicuro (102 941)
 		// Non mi prendete in giro per l'IPC :)
+		// send my ID to the enrolment CA, simulating an OOB channel
+		this.enrolmentCA.setSendingItssIdAndCertificate(//
+				this.sendingItsStation.getMyID(), //
+				this.sendingItsStation.getEnrolmentCredCert());
 
-		// sent my ID to the enrolment CA, simulating an OOB channel
-		CAandID sits_ca_and_id = new CAandID(sits.getMyID(), sits.getEnrolmentCredCert());
-		enrollmentCA.setSitsId(sits_ca_and_id);
+		makeItsStationEnrolment();
 
-		/*
-		 * ENROLMENT
-		 */
-		byte[] enrolmentMSgToSendToEnrolmentCA = sits.requestEnrolment();
-		// Ora lo devo mandare a EnrolCA
-		byte[] enrollmentResponse = enrollmentCA.enrollITS(enrolmentMSgToSendToEnrolmentCA);
-		sits.finishEnrolment(enrollmentResponse);
+		makeAuthorizationRequest();
 
-		/*
-		 * AUTHORIZATION
-		 */
-		// Set some certificate chain
-		// authorizationCA.setEnrollmentCredCertChain(sits.getEnrolmenCredChain());
-		// authorizationCA.setEnrolCAEncKeys(enrollmentCA.getEncryptionKeys());
-		// authorizationCA.setEnrolmentCACert(enrollmentCA.getCertificate());
+		return this.sendingItsStation;
+	}
 
-		byte[] authorizationMsgToSendToAuthorizationCA = sits.requestAuthorizationFor("CAM");
-		authorizationCA.setAuthTicketEncKeysPublicKey(sits.getAuthTicketEncryptionKeys().getPublic());
-		authorizationCA.setAuthTicketSignKeysPublicKey(sits.getAuthTicketSignKeys().getPublic());
-		byte[] authorizationResponse = authorizationCA.authorize(authorizationMsgToSendToAuthorizationCA);
-		sits.setAuthorizationTicket(authorizationResponse);
-		
-		return this.sits;
+	private void makeItsStationEnrolment() throws Exception, IOException, GeneralSecurityException,
+			MessageParsingException, SignatureVerificationException, DecryptionFailedException, InternalErrorException {
+		byte[] enrolmentMsgToSendToEnrolmentCa = this.sendingItsStation.requestEnrolmentMessage();
+
+		byte[] enrollmentResponse = this.enrolmentCA.enrollITS(enrolmentMsgToSendToEnrolmentCa);
+
+		this.sendingItsStation.finishEnrolment(enrollmentResponse);
+	}
+
+	private void makeAuthorizationRequest()
+			throws Exception, IOException, MessageParsingException, SignatureVerificationException,
+			DecryptionFailedException, InternalErrorException, GeneralSecurityException, ParseException {
+		byte[] authorizationMsgToSendToAuthorizationCA = this.sendingItsStation.requestAuthorization();
+		// TODO: understand why I can comment out the following line and everything works just fine
+//		this.authorizationCA
+//				.setAuthTicketEncKeysPublicKey(this.sendingItsStation.getAuthTicketEncryptionKeys().getPublic());
+		this.authorizationCA.setAuthTicketSignKeysPublicKey(this.sendingItsStation.getAuthTicketSignKeys().getPublic());
+		byte[] authorizationResponse = this.authorizationCA.authorize(authorizationMsgToSendToAuthorizationCA);
+		this.sendingItsStation.setAuthorizationTicket(authorizationResponse);
 	}
 
 	public ReceivingITS createReceivingITSS() {
 		try {
-			ritss = new ReceivingITS();
+			receivingItsStation = new ReceivingITS();
 		} catch (Exception e) {
 			System.out.println("Exception during initialization of receiving ITS-S:");
 			System.out.println(e);
 			System.exit(1);
 		}
-		ritss.setAuthorityCACertificate(authorizationCA.getCertificate());
-		ritss.setRootCACertificate(rootCA.getMyCertificate());
+		receivingItsStation.setAuthorityCACertificate(authorizationCA.getCertificate());
+		receivingItsStation.setRootCACertificate(rootCA.getMyCertificate());
 
-		return this.ritss;
+		return this.receivingItsStation;
 	}
 }
