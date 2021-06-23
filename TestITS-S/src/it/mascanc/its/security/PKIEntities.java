@@ -104,7 +104,8 @@ public class PKIEntities {
 			throws Exception, IOException, MessageParsingException, SignatureVerificationException,
 			DecryptionFailedException, InternalErrorException, GeneralSecurityException, ParseException {
 		byte[] authorizationMsgToSendToAuthorizationCA = this.sendingItsStation.requestAuthorization();
-		// TODO: understand why I can comment out the following line and everything works just fine
+		// TODO: understand why I can comment out the following line and everything
+		// works just fine
 //		this.authorizationCA
 //				.setAuthTicketEncKeysPublicKey(this.sendingItsStation.getAuthTicketEncryptionKeys().getPublic());
 		this.authorizationCA.setAuthTicketSignKeysPublicKey(this.sendingItsStation.getAuthTicketSignKeys().getPublic());
@@ -112,14 +113,9 @@ public class PKIEntities {
 		this.sendingItsStation.setAuthorizationTicket(authorizationResponse);
 	}
 
-	public ReceivingITS createReceivingITSS() {
-		try {
-			receivingItsStation = new ReceivingITS();
-		} catch (Exception e) {
-			System.out.println("Exception during initialization of receiving ITS-S:");
-			System.out.println(e);
-			System.exit(1);
-		}
+	public ReceivingITS createReceivingITSS()
+			throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
+		receivingItsStation = new ReceivingITS();
 		receivingItsStation.setAuthorityCACertificate(authorizationCA.getCertificate());
 		receivingItsStation.setRootCACertificate(rootCA.getMyCertificate());
 

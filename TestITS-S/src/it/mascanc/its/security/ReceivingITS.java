@@ -19,8 +19,9 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signatu
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.Certificate;
 
 /**
- * Simulates a receiving ITS-S, e.g., a OBE
- * It receives a CAM (signed) and validates it. 
+ * Simulates a receiving ITS-S, e.g., a OBE It receives a CAM (signed) and
+ * validates it.
+ * 
  * @author max
  *
  */
@@ -30,30 +31,37 @@ public class ReceivingITS {
 	private EtsiTs103097Certificate rootCACertificate;
 	private EtsiTs103097Certificate authorityCACertificate;
 
-	public EtsiTs103097Certificate getRootCACertificate() {
-		return rootCACertificate;
-	}
-
-	public void setRootCACertificate(EtsiTs103097Certificate rootCACertificate) {
-		this.rootCACertificate = rootCACertificate;
-	}
-
-	
-
 	public ReceivingITS() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
 			SignatureException, IOException, BadCredentialsException {
-		cryptoManager = new DefaultCryptoManager();
-		// Initialize the crypto manager to use soft keys using the bouncy castle
-		// cryptographic provider.
-		cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
+		setupCryptoManager();
 	}
 
-	public String receive(byte[] data) throws IllegalArgumentException, IOException, GeneralSecurityException {
-		EtsiTs103097DataSigned cam = new EtsiTs103097DataSigned(data);
+	private void setupCryptoManager() throws NoSuchAlgorithmException, NoSuchProviderException, IOException,
+			BadCredentialsException, SignatureException {
+		this.cryptoManager = new DefaultCryptoManager();
+		// Initialize the crypto manager to use soft keys using the bouncy castle
+		// cryptographic provider.
+		this.cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
+	}
 
-		ETSISecuredDataGenerator securedMessageGenerator = new ETSISecuredDataGenerator(
-				ETSISecuredDataGenerator.DEFAULT_VERSION, cryptoManager, HashAlgorithm.sha256,
-				SignatureChoices.ecdsaNistP256Signature);
+	public String receive(byte[] encodedMessage)
+			throws IllegalArgumentException, IOException, GeneralSecurityException {
+		EtsiTs103097DataSigned camMessage = new EtsiTs103097DataSigned(encodedMessage);
+
+		boolean signatureMatches = checkMessageSignature(camMessage);
+
+		if (signatureMatches) {
+			Logger.shortPrint("HOOORAY! Signature is valid! ");
+		} else {
+			throw new IllegalStateException("Signature validation failed");
+		}
+
+		return camMessage.getContent().getValue().toString();
+	}
+
+	private boolean checkMessageSignature(EtsiTs103097DataSigned camMessage)
+			throws SignatureException, NoSuchAlgorithmException, IOException {
+		ETSISecuredDataGenerator securedMessageGenerator = createSecuredMessageGenerator();
 
 		// To decrypt and verify a signed message it is possible to use the following
 		// First build a truststore of trust anchors (root CA certificate or equivalent)
@@ -61,21 +69,21 @@ public class ReceivingITS {
 				.buildCertStore(new EtsiTs103097Certificate[] { rootCACertificate });
 		// Second build a store of known certificate that might be referenced in the
 		// message.
-		
+
 		Map<HashedId8, Certificate> certStore = securedMessageGenerator
 				.buildCertStore(new EtsiTs103097Certificate[] { authorityCACertificate });
 
-	
-		boolean back = securedMessageGenerator.verifySignedData(cam, certStore, trustStore);
-		
-		if (back) {
-			System.out.println("HOOORAY! Signature is valid! ");
-		}
-		else {
-			throw new IllegalStateException("Siggnature validation failed");
-		}
-		
-		return cam.getContent().getValue().toString();
+		boolean back = securedMessageGenerator.verifySignedData(camMessage, certStore, trustStore);
+		return back;
+	}
+
+	private ETSISecuredDataGenerator createSecuredMessageGenerator() throws SignatureException {
+		ETSISecuredDataGenerator securedMessageGenerator = new ETSISecuredDataGenerator(//
+				ETSISecuredDataGenerator.DEFAULT_VERSION, //
+				cryptoManager, //
+				HashAlgorithm.sha256, //
+				SignatureChoices.ecdsaNistP256Signature);
+		return securedMessageGenerator;
 	}
 
 	public EtsiTs103097Certificate getAuthorityCACertificate() {
@@ -84,6 +92,14 @@ public class ReceivingITS {
 
 	public void setAuthorityCACertificate(EtsiTs103097Certificate authorityCACertificate) {
 		this.authorityCACertificate = authorityCACertificate;
+	}
+
+	public EtsiTs103097Certificate getRootCACertificate() {
+		return rootCACertificate;
+	}
+
+	public void setRootCACertificate(EtsiTs103097Certificate rootCACertificate) {
+		this.rootCACertificate = rootCACertificate;
 	}
 
 }

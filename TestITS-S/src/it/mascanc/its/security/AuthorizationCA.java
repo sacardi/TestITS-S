@@ -172,7 +172,7 @@ public class AuthorizationCA {
 		// The AuthorizationRequestData contains the innerAtRequest and calculated
 		// requestHash
 		InnerAtRequest innerAtRequest = verificationResult.getValue();
-		System.out.println("Got an authorization request from "
+		Logger.shortPrint("Got an authorization request from "
 				+ innerAtRequest.getSharedAtRequest().getRequestedSubjectAttributes().getId());
 
 		// Ok, qui ho da fare il check sui permessi, ci saranno access control.
@@ -248,7 +248,7 @@ public class AuthorizationCA {
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
-		System.out.println("Authorization CA: obtained cert " + cert);
+		Logger.debugPrint("Authorization CA: obtained cert " + cert);
 		this.myCertificate = cert;
 	}
 

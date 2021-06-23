@@ -29,6 +29,8 @@ public class Main {
 	 */
 	public static void main(String[] args) throws Exception {
 
+		Logger.setVerbosity(Logger.VerbosityLevel.DEBUG);
+		
 		PKIEntities pki = new PKIEntities();
 		pki.createAuthorities();
 		
@@ -40,15 +42,15 @@ public class Main {
 		 * Now, if I am here without any exception, I am ready to send a message
 		 */
 		
-		byte[] cam = sendingITSS.sendCAMMessage("Ciao".getBytes());
+		byte[] cam = sendingITSS.sendCAMMessage("AAAA".getBytes());
 		String received = new String("");
 		try {
 			received = receivingITSS.receive(cam);
 		} catch (Exception e) {
-			System.out.println("Receiving ITS-S receive failed:" + e);
+			Logger.shortPrint("Receiving ITS-S receive failed:" + e);
 		}
-		System.out.println("Received: " + received);
-		System.out.println("Closing everything");
+		Logger.debugPrint("Received: " + received);
+		Logger.shortPrint("Closing everything");
 
 	}
 

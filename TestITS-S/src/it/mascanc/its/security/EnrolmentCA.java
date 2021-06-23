@@ -128,12 +128,12 @@ public class EnrolmentCA implements Runnable {
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
-		System.out.println("Enrolment CA: reading certificate " + cert);
+		Logger.debugPrint("Enrolment CA: reading certificate " + cert);
 		this.myCertificate = cert;
 	}
 
 	public void setSigningKeys(KeyPair keys) {
-		System.out.println("Enrolment CA: reading keys " + keys);
+		Logger.debugPrint("Enrolment CA: reading keys " + keys);
 		this.signingKeys = keys;
 	}
 
@@ -205,9 +205,9 @@ public class EnrolmentCA implements Runnable {
 		RequestVerifyResult<InnerEcRequest> innerEcRequest = this.messagesCaGenerator
 				.decryptAndVerifyEnrolmentRequestMessage(encryptedMessage, null, null, enrolCaReceipients);
 
-		System.out.println("Received a enrolment request message from: " + innerEcRequest.getSignerIdentifier());
-		System.out.println("Header info " + innerEcRequest.getHeaderInfo());
-		System.out.println("The inner message " + innerEcRequest.getValue());
+		Logger.shortPrint("Received a enrolment request message from: " + innerEcRequest.getSignerIdentifier());
+		Logger.debugPrint("Header info " + innerEcRequest.getHeaderInfo());
+		Logger.debugPrint("The inner message " + innerEcRequest.getValue());
 		return innerEcRequest;
 	}
 
@@ -235,13 +235,13 @@ public class EnrolmentCA implements Runnable {
 		InnerEcRequest msgRequest = enrolmentRequestResult.getValue();
 		byte[] itsId = msgRequest.getItsId();
 
-		System.out.println("The ITS id received is " + new String(itsId));
+		Logger.shortPrint("The ITS id received is " + new String(itsId));
 		// let me get the information for this ITS ID
 		return itsId;
 	}
 
 	private EtsiTs103097Certificate createEnrolmentCredentialForItss() throws SignatureException, IOException {
-		System.out.println("The S-ITS-S is known, generating its certificate");
+		Logger.shortPrint("The S-ITS-S is known, generating its certificate");
 
 		ETSIEnrollmentCredentialGenerator enrollmentCredentialCertGenerator = new ETSIEnrollmentCredentialGenerator(
 				cryptoManager);
@@ -305,7 +305,7 @@ public class EnrolmentCA implements Runnable {
 
 	private InnerEcResponse createNegativeInnerEcResponse(RequestVerifyResult<InnerEcRequest> enrolmentRequestResult) {
 		InnerEcResponse innerEcResponse;
-		System.out.println("Ths S-ITS-S is UNKNOWN");
+		Logger.shortPrint("Ths S-ITS-S is UNKNOWN");
 		innerEcResponse = new InnerEcResponse(enrolmentRequestResult.getRequestHash(),
 				EnrollmentResponseCode.unknownits, null);
 		return innerEcResponse;

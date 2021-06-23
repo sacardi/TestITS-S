@@ -83,6 +83,7 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.H
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.EncryptResult;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.SecuredDataGenerator;
+import org.certificateservices.custom.c2x.ieee1609dot2.generator.SecuredDataGenerator.SignerIdentifierType;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.PreSharedKeyReceiver;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Receiver;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.recipient.CertificateRecipient;
@@ -139,7 +140,7 @@ public class SendingITSS {
 	private KeyPair authTicketSignKeys;
 	private KeyPair authTicketEncryptionKeys;
 
-	private EtsiTs103097Certificate rootCaCert;
+	private EtsiTs103097Certificate requestedCertificateHeaderInfo;
 	private EtsiTs103097Certificate enrolmentCaCertificate;
 	private EtsiTs103097Certificate authorizationCaCertificate;
 
@@ -153,7 +154,7 @@ public class SendingITSS {
 	private GeographicRegion geographicRegion;
 	private PublicVerificationKeyChoices signingAlgorithm;
 	private EncryptResult initialEnrolmentRequestMessageResult;
-	private BasePublicEncryptionKeyChoices encryptionAlgorithm;
+	// private BasePublicEncryptionKeyChoices encryptionAlgorithm;
 	private Date timeStamp;
 	private SharedAtRequest sharedAuthorizationTicketRequest;
 	private SecretKey mySecretKey;
@@ -182,7 +183,8 @@ public class SendingITSS {
 		setCaMessagesGenerator();
 
 		this.signingAlgorithm = ecdsaNistP256;
-		this.encryptionAlgorithm = BasePublicEncryptionKey.BasePublicEncryptionKeyChoices.ecdsaNistP256;
+		// this.encryptionAlgorithm =
+		// BasePublicEncryptionKey.BasePublicEncryptionKeyChoices.ecdsaNistP256;
 		this.secureRandom = new SecureRandom();
 
 		setRegionToItaly();
@@ -211,7 +213,7 @@ public class SendingITSS {
 					digestAlgorithm, //
 					signatureScheme);
 		} catch (SignatureException e) {
-			System.out.println("Exception with setCaMessagesGenerator: " + e);
+			Logger.shortPrint("Exception with setCaMessagesGenerator: " + e);
 			System.exit(1);
 		}
 	}
@@ -373,7 +375,7 @@ public class SendingITSS {
 				signerPrivateKey, //
 				recipientCaCertificate);
 
-		System.out.println("Generato un messaggio di richiesta di enrolment per enrolCa. Io sono " + myID
+		Logger.debugPrint("Generato un messaggio di richiesta di enrolment per enrolCa. Io sono " + myID
 				+ " e la richiesta e' " + innerEcRequest);
 
 		return this.initialEnrolmentRequestMessageResult.getEncryptedData().getEncoded();
@@ -400,14 +402,14 @@ public class SendingITSS {
 
 		InnerEcResponse innerResponse = enrolmentResponse.getValue();
 
-		System.out.println("Got a inner response for my enrolment request. How do I check the replay? With the hash! ");
+		Logger.shortPrint("Got a inner response for my enrolment request. How do I check the replay? With the hash! ");
 		boolean innerResponseIsOk = innerResponse.getResponseCode().equals(EnrollmentResponseCode.ok);
 
 		if (innerResponseIsOk) {
-			System.out.println("All is good I'm enrolled! ");
+			Logger.shortPrint("All is good I'm enrolled! ");
 			setEnrolmentCredentialsFromResponse(innerResponse);
 		} else {
-			System.out.println("Mmmm, I'm not good, error");
+			Logger.shortPrint("Mmmm, I'm not good, error");
 			System.exit(1);
 		}
 	}
@@ -415,7 +417,7 @@ public class SendingITSS {
 	private void setEnrolmentCredentialsFromResponse(InnerEcResponse innerResponse) {
 		this.enrolmentCredCert = innerResponse.getCertificate();
 		this.enrolmentCredentialCertificateChain = new EtsiTs103097Certificate[] { this.enrolmentCredCert,
-				this.enrolmentCaCertificate, this.rootCaCert };
+				this.enrolmentCaCertificate, this.requestedCertificateHeaderInfo };
 	}
 
 	private VerifyResult<InnerEcResponse> getEnrolmentResponse(byte[] enrolmentResponseReceivedFromEnrolmentCa)
@@ -425,10 +427,10 @@ public class SendingITSS {
 				enrolmentResponseReceivedFromEnrolmentCa);
 
 		Map<HashedId8, Certificate> trustStore = this.messagesCaGenerator
-				.buildCertStore(new EtsiTs103097Certificate[] { this.rootCaCert });
+				.buildCertStore(new EtsiTs103097Certificate[] { this.requestedCertificateHeaderInfo });
 
-		Map<HashedId8, Certificate> enrolCACertStore = this.messagesCaGenerator
-				.buildCertStore(new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCert });
+		Map<HashedId8, Certificate> enrolCACertStore = this.messagesCaGenerator.buildCertStore(
+				new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.requestedCertificateHeaderInfo });
 
 		// Build reciever store containing the symmetric key used in the request.
 		Map<HashedId8, Receiver> enrolCredSharedKeyReceivers = this.messagesCaGenerator
@@ -566,12 +568,12 @@ public class SendingITSS {
 		EtsiTs103097DataEncryptedUnicast msg = getEnrolmentResponseResultFromEncryptedMessage(authorizationResponse);
 
 		Map<HashedId8, Certificate> trustStore = messagesCaGenerator
-				.buildCertStore(new EtsiTs103097Certificate[] { rootCaCert });
+				.buildCertStore(new EtsiTs103097Certificate[] { requestedCertificateHeaderInfo });
 
 		Map<HashedId8, Receiver> authTicketSharedKeyReceivers = messagesCaGenerator
 				.buildRecieverStore(new Receiver[] { new PreSharedKeyReceiver(SymmAlgorithm.aes128Ccm, mySecretKey) });
-		Map<HashedId8, Certificate> authCACertStore = messagesCaGenerator
-				.buildCertStore(new EtsiTs103097Certificate[] { authorizationCaCertificate, rootCaCert });
+		Map<HashedId8, Certificate> authCACertStore = messagesCaGenerator.buildCertStore(
+				new EtsiTs103097Certificate[] { authorizationCaCertificate, requestedCertificateHeaderInfo });
 		VerifyResult<InnerAtResponse> authResponseResult = messagesCaGenerator
 				.decryptAndVerifyAuthorizationResponseMessage(msg, authCACertStore, // certificate store
 																					// containing
@@ -579,7 +581,7 @@ public class SendingITSS {
 																					// auth cert.
 						trustStore, authTicketSharedKeyReceivers);
 		ticket = authResponseResult.getValue();
-		System.out.println("Finally I have an authorization Ticket!!! " + authResponseResult);
+		Logger.debugPrint("Finally I have an authorization Ticket!!! " + authResponseResult);
 	}
 
 	private byte[] genKeyTag(byte[] hmacKey, PublicVerificationKey verificationKey, PublicEncryptionKey encryptionKey)
@@ -616,30 +618,59 @@ public class SendingITSS {
 				(certIssuePermissions != null ? new SequenceOfPsidGroupPermissions(certIssuePermissions) : null));
 	}
 
-	public byte[] sendCAMMessage(byte[] data) throws IllegalArgumentException, IOException, GeneralSecurityException {
-		ETSISecuredDataGenerator securedMessageGenerator = new ETSISecuredDataGenerator(
-				ETSISecuredDataGenerator.DEFAULT_VERSION, cryptoManager, HashAlgorithm.sha256,
-				SignatureChoices.ecdsaNistP256Signature);
-		// To generate a Signed CA Message it is possible to use
-		List<HashedId3> hashedId3s = new ArrayList<HashedId3>();
-		hashedId3s.add(new HashedId3(cryptoManager.digest(rootCaCert.getEncoded(), HashAlgorithm.sha256)));
-		hashedId3s.add(new HashedId3(cryptoManager.digest(enrolmentCaCertificate.getEncoded(), HashAlgorithm.sha256)));
-		SequenceOfHashedId3 inlineP2pcdRequest = new SequenceOfHashedId3(hashedId3s);
-		byte[] cAMessageData = data;
-		EtsiTs103097DataSigned cAMessage = securedMessageGenerator.genCAMessage(new Time64(new Date()), // generationTime
-				inlineP2pcdRequest, // InlineP2pcdRequest (Required)
-				rootCaCert, // requestedCertificate
-				cAMessageData, // inner opaque CA message data
-				SecuredDataGenerator.SignerIdentifierType.SIGNER_CERTIFICATE, // signerIdentifierType
-				ticket.getCertificate(), // signerCertificate
-				authTicketSignKeys.getPrivate()); // signerPrivateKey
+	public byte[] sendCAMMessage(byte[] encodedCamMessage)
+			throws IllegalArgumentException, IOException, GeneralSecurityException {
+		ETSISecuredDataGenerator securedMessageGenerator = createSecuredMessageGenerator();
 
-// message can be encrypted by using some shared keys (e.g., 211177??)
-//		EncryptResult encryptedDataResult = securedMessageGenerator.genEtsiTs103097DataEncrypted(BasePublicEncryptionKeyChoices.ecdsaNistP256,
-//				cAMessage.getEncoded(), new Recipient[] {new CertificateRecipient(enrolmentCredCert)});
-//		EtsiTs103097DataEncrypted encryptedData = (EtsiTs103097DataEncrypted) encryptedDataResult.getEncryptedData();
+		EtsiTs103097DataSigned cAMessage = generateCamMessage(encodedCamMessage, securedMessageGenerator);
+
 		return cAMessage.getEncoded();
+	}
 
+	private EtsiTs103097DataSigned generateCamMessage(byte[] encodedDenmMessage,
+			ETSISecuredDataGenerator securedMessageGenerator)
+			throws NoSuchAlgorithmException, IOException, SignatureException {
+		Time64 generationTime = new Time64(new Date());
+
+		SequenceOfHashedId3 inlineP2pcdRequestHeaderInfo = createHeaderInfo();
+
+		EtsiTs103097Certificate signerCertificate = ticket.getCertificate();
+
+		PrivateKey signerPrivateKey = authTicketSignKeys.getPrivate();
+
+		SignerIdentifierType signerIdentifierType = SecuredDataGenerator.SignerIdentifierType.SIGNER_CERTIFICATE;
+
+		EtsiTs103097DataSigned cAMessage = securedMessageGenerator.genCAMessage(//
+				generationTime, //
+				inlineP2pcdRequestHeaderInfo, //
+				requestedCertificateHeaderInfo, //
+				encodedDenmMessage, // ?? (check the function prototype)
+				signerIdentifierType, // signerIdentifierType
+				signerCertificate, // signerCertificate
+				signerPrivateKey); // signerPrivateKey
+
+		return cAMessage;
+	}
+
+	private SequenceOfHashedId3 createHeaderInfo() throws NoSuchAlgorithmException, IOException {
+		List<HashedId3> hashedId3s = new ArrayList<HashedId3>();
+		hashedId3s.add(
+				new HashedId3(cryptoManager.digest(requestedCertificateHeaderInfo.getEncoded(), HashAlgorithm.sha256)));
+		hashedId3s.add(new HashedId3(cryptoManager.digest(enrolmentCaCertificate.getEncoded(), HashAlgorithm.sha256)));
+		SequenceOfHashedId3 headerInfo = new SequenceOfHashedId3(hashedId3s);
+		return headerInfo;
+	}
+
+	private ETSISecuredDataGenerator createSecuredMessageGenerator() throws SignatureException {
+		int version = ETSISecuredDataGenerator.DEFAULT_VERSION;
+		HashAlgorithm hashAlgorithm = HashAlgorithm.sha256;
+		SignatureChoices signingAlgorithm = SignatureChoices.ecdsaNistP256Signature;
+		ETSISecuredDataGenerator securedMessageGenerator = new ETSISecuredDataGenerator(//
+				version, //
+				this.cryptoManager, //
+				hashAlgorithm, //
+				signingAlgorithm);
+		return securedMessageGenerator;
 	}
 
 	/**
@@ -651,14 +682,12 @@ public class SendingITSS {
 	 * @throws GeneralSecurityException
 	 */
 	public byte[] sendCAMMessage2(byte[] data) throws IllegalArgumentException, IOException, GeneralSecurityException {
-		// EtsiTs103097Data are created by the Secure Message Generator
-		ETSISecuredDataGenerator securedMessageGenerator = new ETSISecuredDataGenerator(
-				ETSISecuredDataGenerator.DEFAULT_VERSION, cryptoManager, HashAlgorithm.sha256,
-				SignatureChoices.ecdsaNistP256Signature);
+		ETSISecuredDataGenerator securedMessageGenerator = createSecuredMessageGenerator();
 
 		// To generate a Signed CA Message it is possible to use
 		List<HashedId3> hashedId3s = new ArrayList<HashedId3>();
-		hashedId3s.add(new HashedId3(cryptoManager.digest(rootCaCert.getEncoded(), HashAlgorithm.sha256)));
+		hashedId3s.add(
+				new HashedId3(cryptoManager.digest(requestedCertificateHeaderInfo.getEncoded(), HashAlgorithm.sha256)));
 		hashedId3s.add(new HashedId3(cryptoManager.digest(enrolmentCaCertificate.getEncoded(), HashAlgorithm.sha256)));
 		// SequenceOfHashedId3 inlineP2pcdRequest = new SequenceOfHashedId3(hashedId3s);
 
@@ -702,8 +731,9 @@ public class SendingITSS {
 				SecuredDataGenerator.SignerIdentifierType.HASH_ONLY, // One of HASH_ONLY, SIGNER_CERTIFICATE, CERT_CHAIN
 																		// indicating reference data of the signer to
 																		// include in the message
-				new EtsiTs103097Certificate[] { ticket.getCertificate(), authorizationCaCertificate, rootCaCert }, // The
-																													// chain
+				new EtsiTs103097Certificate[] { ticket.getCertificate(), authorizationCaCertificate,
+						requestedCertificateHeaderInfo }, // The
+				// chain
 				// is
 				// required
 				// even
@@ -717,7 +747,7 @@ public class SendingITSS {
 		// It is also possible to generate a EtsiTs103097DataSignedExternalPayload with
 		// the genEtsiTs103097DataSignedExternalPayload()
 		// method.
-		System.out.println("Signed DATA " + signedData);
+		Logger.debugPrint("Signed DATA " + signedData);
 		// The message can be encrypted with the method
 		// First construct a list of recipient which have the public key specified
 		// either as a symmetric key, certificate or in header of signed data
@@ -730,7 +760,8 @@ public class SendingITSS {
 //			    // It is also possible to sign and encrypt in one go.
 		EncryptResult encryptedAndSignedMessageResult = securedMessageGenerator.genEtsiTs103097DataSignedAndEncrypted(
 				hi, data, SecuredDataGenerator.SignerIdentifierType.HASH_ONLY,
-				new EtsiTs103097Certificate[] { ticket.getCertificate(), authorizationCaCertificate, rootCaCert },
+				new EtsiTs103097Certificate[] { ticket.getCertificate(), authorizationCaCertificate,
+						requestedCertificateHeaderInfo },
 				authTicketSignKeys.getPrivate(), // Important to use the reconstructed private key for implicit
 													// certificates
 				BasePublicEncryptionKeyChoices.ecdsaNistP256,
@@ -779,11 +810,11 @@ public class SendingITSS {
 	}
 
 	public EtsiTs103097Certificate getRootCACert() {
-		return rootCaCert;
+		return requestedCertificateHeaderInfo;
 	}
 
 	public void setRootCaCert(EtsiTs103097Certificate rootCACert) {
-		this.rootCaCert = rootCACert;
+		this.requestedCertificateHeaderInfo = rootCACert;
 	}
 
 	public EtsiTs103097Certificate getEnrolmentCaCert() {
