@@ -20,7 +20,7 @@ public class PKIEntities {
 	private EnrolmentCA enrolmentCA;
 	private AuthorizationCA authorizationCA;
 	private SendingITSS sendingItsStation;
-	private ReceivingITS receivingItsStation;
+	private ReceivingITSS receivingItsStation;
 
 	public PKIEntities() {
 	}
@@ -30,11 +30,13 @@ public class PKIEntities {
 		createRootCA();
 		createEnrolmentCA();
 		createAuthorizationCA();
+		Logger.shortPrint("");
 	}
 
 	private void createRootCA() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
 			BadCredentialsException, IllegalArgumentException, SignatureException, IOException {
 		rootCA = new RootCA();
+		Logger.shortPrint("");
 	}
 
 	private void createEnrolmentCA() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
@@ -113,9 +115,9 @@ public class PKIEntities {
 		this.sendingItsStation.setAuthorizationTicket(authorizationResponse);
 	}
 
-	public ReceivingITS createReceivingITSS()
+	public ReceivingITSS createReceivingITSS()
 			throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
-		receivingItsStation = new ReceivingITS();
+		receivingItsStation = new ReceivingITSS();
 		receivingItsStation.setAuthorityCACertificate(authorizationCA.getCertificate());
 		receivingItsStation.setRootCACertificate(rootCA.getMyCertificate());
 

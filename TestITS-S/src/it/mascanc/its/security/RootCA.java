@@ -212,7 +212,7 @@ public class RootCA implements Runnable {
 				publicKeyEncryptionAlgorithm, //
 				encryptionPublicKey);
 
-		Logger.shortPrint("Created Root CA certificate");
+		Logger.shortPrint("[root CA         ] created Root CA certificate");
 	}
 
 	/**
@@ -256,7 +256,7 @@ public class RootCA implements Runnable {
 		);
 		this.enrollmentCaChain = new EtsiTs103097Certificate[] { this.enrollmentCaCertificate, this.rootCaCertificate };
 
-		Logger.shortPrint("Created Enrolment CA certificate");
+		Logger.shortPrint("[root CA         ] created Enrolment CA certificate");
 	}
 
 	private void createAuthorizationCACertificate() throws IllegalArgumentException, SignatureException, IOException {
@@ -290,7 +290,7 @@ public class RootCA implements Runnable {
 		this.authorizationCAChain = new EtsiTs103097Certificate[] { this.authorizationCaCertificate,
 				this.rootCaCertificate };
 
-		Logger.shortPrint("Created Authorization CA certificate");
+		Logger.shortPrint("[root CA         ] created Authorization CA certificate");
 	}
 
 	public EtsiTs103097Certificate getRootCaCertificate() {

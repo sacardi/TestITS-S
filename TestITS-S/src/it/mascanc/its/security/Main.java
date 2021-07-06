@@ -25,32 +25,33 @@ public class Main {
 	 * </ul>
 	 * 
 	 * @param args
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
 
-		Logger.setVerbosity(Logger.VerbosityLevel.DEBUG);
-		
+		Logger.setVerbosity(Logger.VerbosityLevel.SHORT_MESSAGES);
+
 		PKIEntities pki = new PKIEntities();
 		pki.createAuthorities();
-		
+
 		SendingITSS sendingITSS = pki.createSendingITSS();
-		ReceivingITS receivingITSS = pki.createReceivingITSS();
-		
-		
+		ReceivingITSS receivingITSS = pki.createReceivingITSS();
+
 		/*
 		 * Now, if I am here without any exception, I am ready to send a message
 		 */
-		
+
 		byte[] cam = sendingITSS.sendCAMMessage("AAAA".getBytes());
 		String received = new String("");
 		try {
 			received = receivingITSS.receive(cam);
 		} catch (Exception e) {
-			Logger.shortPrint("Receiving ITS-S receive failed:" + e);
+			Logger.shortPrint("[main            ] 3) Receiving ITS-S receive failed:" + e);
 		}
-		Logger.debugPrint("Received: " + received);
-		Logger.shortPrint("Closing everything");
+		Logger.debugPrint("[main            ] 3) Received message from receivingITSS: " + received);
+		Logger.shortPrint("[main            ] 3) Received message from receivingITSS");
+		Logger.shortPrint("");
+		Logger.shortPrint("[main            ] Closing everything");
 
 	}
 
@@ -65,5 +66,5 @@ public class Main {
 //		
 //	}
 //	
-	
+
 }

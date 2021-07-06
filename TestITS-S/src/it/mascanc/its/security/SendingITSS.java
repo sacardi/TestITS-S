@@ -213,7 +213,7 @@ public class SendingITSS {
 					digestAlgorithm, //
 					signatureScheme);
 		} catch (SignatureException e) {
-			Logger.shortPrint("Exception with setCaMessagesGenerator: " + e);
+			Logger.shortPrint("[sending ITSS    ] Exception with setCaMessagesGenerator: " + e);
 			System.exit(1);
 		}
 	}
@@ -375,8 +375,10 @@ public class SendingITSS {
 				signerPrivateKey, //
 				recipientCaCertificate);
 
-		Logger.debugPrint("Generato un messaggio di richiesta di enrolment per enrolCa. Io sono " + myID
-				+ " e la richiesta e' " + innerEcRequest);
+		Logger.debugPrint("[sending ITSS    ] 1) RequestEnrolmentMessage generated. I am " + myID
+				+ " and the request is " + innerEcRequest);
+		Logger.shortPrint(
+				"[sending ITSS    ] 1) RequestEnrolmentMessage generated. I am " + myID);
 
 		return this.initialEnrolmentRequestMessageResult.getEncryptedData().getEncoded();
 	}
@@ -402,14 +404,16 @@ public class SendingITSS {
 
 		InnerEcResponse innerResponse = enrolmentResponse.getValue();
 
-		Logger.shortPrint("Got a inner response for my enrolment request. How do I check the replay? With the hash! ");
+		Logger.shortPrint(
+				"[sending ITSS    ] 1) Got a inner response for my enrolment request. How do I check the replay? With the hash! ");
 		boolean innerResponseIsOk = innerResponse.getResponseCode().equals(EnrollmentResponseCode.ok);
 
 		if (innerResponseIsOk) {
-			Logger.shortPrint("All is good I'm enrolled! ");
+			Logger.shortPrint("[sending ITSS    ] 1) All is good I'm enrolled! ");
+			Logger.shortPrint("");
 			setEnrolmentCredentialsFromResponse(innerResponse);
 		} else {
-			Logger.shortPrint("Mmmm, I'm not good, error");
+			Logger.shortPrint("[sending ITSS    ] 1) Mmmm, I'm not good, error");
 			System.exit(1);
 		}
 	}
@@ -581,7 +585,8 @@ public class SendingITSS {
 																					// auth cert.
 						trustStore, authTicketSharedKeyReceivers);
 		ticket = authResponseResult.getValue();
-		Logger.debugPrint("Finally I have an authorization Ticket!!! " + authResponseResult);
+		Logger.debugPrint("[sending ITSS    ] 2) Finally I have an authorization Ticket!!! " + authResponseResult);
+		Logger.shortPrint("[sending ITSS    ] 2) Finally I have an authorization Ticket!!! ");
 	}
 
 	private byte[] genKeyTag(byte[] hmacKey, PublicVerificationKey verificationKey, PublicEncryptionKey encryptionKey)

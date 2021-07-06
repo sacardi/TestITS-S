@@ -25,13 +25,13 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.Certific
  * @author max
  *
  */
-public class ReceivingITS {
+public class ReceivingITSS {
 
 	private DefaultCryptoManager cryptoManager;
 	private EtsiTs103097Certificate rootCACertificate;
 	private EtsiTs103097Certificate authorityCACertificate;
 
-	public ReceivingITS() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
+	public ReceivingITSS() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
 			SignatureException, IOException, BadCredentialsException {
 		setupCryptoManager();
 	}
@@ -51,7 +51,8 @@ public class ReceivingITS {
 		boolean signatureMatches = checkMessageSignature(camMessage);
 
 		if (signatureMatches) {
-			Logger.shortPrint("HOOORAY! Signature is valid! ");
+			Logger.shortPrint("");
+			Logger.shortPrint("[receiving ITSS  ] 3) HOOORAY! Signature is valid! ");
 		} else {
 			throw new IllegalStateException("Signature validation failed");
 		}

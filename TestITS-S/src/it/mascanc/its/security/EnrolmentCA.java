@@ -128,12 +128,14 @@ public class EnrolmentCA implements Runnable {
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
-		Logger.debugPrint("Enrolment CA: reading certificate " + cert);
+		Logger.debugPrint("[enrolment CA    ] 0a) obtained certificate " + cert);
+		Logger.shortPrint("[enrolment CA    ] 0a) obtained certificate");
 		this.myCertificate = cert;
 	}
 
 	public void setSigningKeys(KeyPair keys) {
-		Logger.debugPrint("Enrolment CA: reading keys " + keys);
+		Logger.debugPrint("[enrolment CA    ] 0a) obtained keys " + keys);
+		Logger.shortPrint("[enrolment CA    ] 0a) obtained keys");
 		this.signingKeys = keys;
 	}
 
@@ -205,9 +207,9 @@ public class EnrolmentCA implements Runnable {
 		RequestVerifyResult<InnerEcRequest> innerEcRequest = this.messagesCaGenerator
 				.decryptAndVerifyEnrolmentRequestMessage(encryptedMessage, null, null, enrolCaReceipients);
 
-		Logger.shortPrint("Received a enrolment request message from: " + innerEcRequest.getSignerIdentifier());
-		Logger.debugPrint("Header info " + innerEcRequest.getHeaderInfo());
-		Logger.debugPrint("The inner message " + innerEcRequest.getValue());
+		Logger.shortPrint("[enrolment CA    ] 1) Received a enrolment request message from: " + innerEcRequest.getSignerIdentifier());
+		Logger.debugPrint("[enrolment CA    ] 1) Header info" + innerEcRequest.getHeaderInfo());
+		Logger.debugPrint("[enrolment CA    ] 1) The inner message " + innerEcRequest.getValue());
 		return innerEcRequest;
 	}
 
@@ -235,13 +237,13 @@ public class EnrolmentCA implements Runnable {
 		InnerEcRequest msgRequest = enrolmentRequestResult.getValue();
 		byte[] itsId = msgRequest.getItsId();
 
-		Logger.shortPrint("The ITS id received is " + new String(itsId));
+		Logger.shortPrint("[enrolment CA    ] 1) The ITS id received is " + new String(itsId));
 		// let me get the information for this ITS ID
 		return itsId;
 	}
 
 	private EtsiTs103097Certificate createEnrolmentCredentialForItss() throws SignatureException, IOException {
-		Logger.shortPrint("The S-ITS-S is known, generating its certificate");
+		Logger.shortPrint("[enrolment CA    ] 1) The S-ITS-S is known, generating its certificate");
 
 		ETSIEnrollmentCredentialGenerator enrollmentCredentialCertGenerator = new ETSIEnrollmentCredentialGenerator(
 				cryptoManager);
