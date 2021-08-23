@@ -41,7 +41,7 @@ public class Main {
 		 * Now, if I am here without any exception, I am ready to send a message
 		 */
 
-		byte[] cam = sendingITSS.sendCAMMessage("AAAA".getBytes());
+		byte[] cam = sendingITSS.getCam("AAAA".getBytes());
 		String received = new String("");
 		try {
 			received = receivingITSS.receive(cam);
@@ -52,19 +52,7 @@ public class Main {
 		Logger.shortPrint("[main            ] 3) Received message from receivingITSS");
 		Logger.shortPrint("");
 		Logger.shortPrint("[main            ] Closing everything");
+		//byte[] denm = sendingITSS.getDenm("Hello".getBytes());
 
 	}
-
-//	private static void send(String message, int port) throws UnknownHostException, IOException {
-//		Socket socket = new Socket("localhost", port);
-//
-//		DataOutputStream dout=new DataOutputStream(socket.getOutputStream());
-//		dout.write(message.getBytes());
-//		dout.flush();
-//		dout.close();
-//		socket.close();
-//		
-//	}
-//	
-
 }

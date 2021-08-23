@@ -115,8 +115,8 @@ public class PKIEntities {
 		this.sendingItsStation.setAuthorizationTicket(authorizationResponse);
 	}
 
-	public ReceivingITSS createReceivingITSS()
-			throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
+	public ReceivingITSS createReceivingITSS() throws IllegalArgumentException, NoSuchAlgorithmException,
+			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
 		receivingItsStation = new ReceivingITSS();
 		receivingItsStation.setAuthorityCACertificate(authorizationCA.getCertificate());
 		receivingItsStation.setRootCACertificate(rootCA.getMyCertificate());

@@ -51,7 +51,6 @@ public class ReceivingITSS {
 		boolean signatureMatches = checkMessageSignature(camMessage);
 
 		if (signatureMatches) {
-			Logger.shortPrint("");
 			Logger.shortPrint("[receiving ITSS  ] 3) HOOORAY! Signature is valid! ");
 		} else {
 			throw new IllegalStateException("Signature validation failed");
