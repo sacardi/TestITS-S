@@ -82,6 +82,8 @@ public class PKIEntities {
 		// e passate tramite un canale sicuro (102 941)
 		// Non mi prendete in giro per l'IPC :)
 		// send my ID to the enrolment CA, simulating an OOB channel
+		// TODO: enrolmentCredCert at this point is empty. Maybe we should pass the
+		// S-ITSS certificate, not the enrolment credentials
 		this.enrolmentCA.setSendingItssIdAndCertificate(//
 				this.sendingItsStation.getMyID(), //
 				this.sendingItsStation.getEnrolmentCredCert());
@@ -122,5 +124,32 @@ public class PKIEntities {
 		receivingItsStation.setRootCACertificate(rootCA.getMyCertificate());
 
 		return this.receivingItsStation;
+	}
+
+	public void generateCTL() {
+		try {
+			this.rootCA.generateCTL();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void readCTL(String filename) {
+		try {
+			this.rootCA.readCTL(filename);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void readCTL_cohda(String filename) {
+		try {
+			this.rootCA.readCTL_cohda(filename);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

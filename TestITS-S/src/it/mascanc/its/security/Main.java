@@ -1,4 +1,5 @@
 package it.mascanc.its.security;
+//import akka.actor.typed.ActorSystem;
 
 public class Main {
 
@@ -53,6 +54,11 @@ public class Main {
 		Logger.shortPrint("");
 		Logger.shortPrint("[main            ] Closing everything");
 		//byte[] denm = sendingITSS.getDenm("Hello".getBytes());
+		
+		pki.generateCTL();
+		pki.readCTL("CTL.coer");
+//		pki.readCTL("innerCTL.coer"); // will not work
+//		pki.readCTL_cohda("ctl_cohda.coer");
 
 	}
 }
