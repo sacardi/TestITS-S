@@ -108,7 +108,7 @@ public class RootCA implements Runnable {
 
 	private EtsiTs103097Certificate[] authorizationCAChain;
 
-	private GeographicRegion geographicRegion;
+//	private GeographicRegion geographicRegion;
 
 	// Set the Root CA according with ETSI 103 097
 	public RootCA() throws IllegalArgumentException, SignatureException, IOException, InvalidKeyException,
@@ -131,7 +131,7 @@ public class RootCA implements Runnable {
 			SignatureException, IOException, BadCredentialsException, InvalidKeyException {
 		setupCryptoManager();
 
-		setGeographicRegionToItaly();
+//		setGeographicRegionToItaly();
 
 		generateCertificateKeyPairs();
 	}
@@ -155,14 +155,14 @@ public class RootCA implements Runnable {
 		this.authorityCertGenerator = new ETSIAuthorityCertGenerator(this.cryptoManager);
 	}
 
-	private void setGeographicRegionToItaly() {
-		// this is defined in IEEE Std 1609. For italy we have:
-		// https://www.iso.org/obp/ui/#iso:code:3166:IT
-
-		List<Integer> countries = new ArrayList<Integer>();
-		countries.add(Constants.REGION_ITALY);
-		this.geographicRegion = GeographicRegion.generateRegionForCountrys(countries);
-	}
+//	private void setGeographicRegionToItaly() {
+//		// this is defined in IEEE Std 1609. For italy we have:
+//		// https://www.iso.org/obp/ui/#iso:code:3166:IT
+//
+//		List<Integer> countries = new ArrayList<Integer>();
+//		countries.add(Constants.REGION_ITALY);
+//		this.geographicRegion = GeographicRegion.generateRegionForCountrys(countries);
+//	}
 
 	private void generateCertificateKeyPairs() throws InvalidKeyException, IllegalArgumentException, IOException {
 		// Root CA Keys
@@ -210,7 +210,7 @@ public class RootCA implements Runnable {
 
 		String cAName = "samuCA.autostrade.it";
 		// Defined in section 6.
-		ValidityPeriod rootCAValidityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 45);
+		ValidityPeriod rootCAValidityPeriod = new ValidityPeriod(new Date(System.currentTimeMillis()-3*24*60*60*1000), DurationChoices.years, 45);
 		int minChainDepth = 3;
 		int chainDepthRange = -1;
 		// What I don't know: the minChainDepth and the chainDepthRange. The EC is
@@ -266,7 +266,7 @@ public class RootCA implements Runnable {
 
 		String eAName = "EA.samuCA.autostrade.it";
 		// This is a very long term certificate!!!!!
-		ValidityPeriod enrollmentCAValidityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 37);
+		ValidityPeriod enrollmentCAValidityPeriod = new ValidityPeriod(new Date(System.currentTimeMillis()-3*24*60*60*1000), DurationChoices.years, 37);
 		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
 		PublicKey verificationPublicKey = this.enrollmentCaSigningKeys.getPublic();
@@ -280,7 +280,8 @@ public class RootCA implements Runnable {
 		// Generate a reference to the Enrollment CA Signing Keys
 		this.enrolmentCaCertificate = this.authorityCertGenerator.genEnrollmentCA(eAName, //
 				enrollmentCAValidityPeriod, //
-				this.geographicRegion, //
+//				this.geographicRegion, //
+				null, // geographicRegion
 //				subjectAssurance, //
 				null, // subjectAssurance
 				signingPublicKeyAlgorithm, //
@@ -300,7 +301,7 @@ public class RootCA implements Runnable {
 	private void createAuthorizationCACertificate() throws IllegalArgumentException, SignatureException, IOException {
 
 		String aAName = "AA.samuCA.autostrade.it";
-		ValidityPeriod authorityCAValidityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 15);
+		ValidityPeriod authorityCAValidityPeriod = new ValidityPeriod(new Date(System.currentTimeMillis()-3*24*60*60*1000), DurationChoices.years, 15);
 		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
 		PublicKey verificationPublicKey = this.authorizationCaSigningKeys.getPublic();
@@ -314,7 +315,8 @@ public class RootCA implements Runnable {
 		// Generate a reference to the Authorization CA Signing Keys
 		this.authorizationCaCertificate = this.authorityCertGenerator.genAuthorizationCA(aAName, //
 				authorityCAValidityPeriod, //
-				this.geographicRegion, //
+//				this.geographicRegion, //
+				null, // geographicRegion
 //				subjectAssurance, //
 				null, // subjectAssurance
 				signingPublicKeyAlgorithm, //
@@ -467,7 +469,7 @@ public class RootCA implements Runnable {
 		final Version version = Version.V1;
 		final Time32 nextUpdate = new Time32(dateFormat.parse("20250910 14:14:14"));
 		final boolean isFullCtl = true;
-		final int ctlSequence = 1;
+		final int ctlSequence = 0;
 
 		// for pvendil: according to the standard
 		// TODO: parameter linkRootCaCertificate of RootCaEntry must be optional
