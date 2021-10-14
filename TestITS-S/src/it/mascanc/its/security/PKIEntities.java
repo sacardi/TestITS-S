@@ -26,7 +26,7 @@ public class PKIEntities {
 	}
 
 	public void createAuthorities() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
-			SignatureException, IOException, BadCredentialsException, InvalidKeyException {
+			SignatureException, IOException, BadCredentialsException, InvalidKeyException, ClassNotFoundException {
 		createRootCA();
 		createEnrolmentCA();
 		createAuthorizationCA();
@@ -34,7 +34,7 @@ public class PKIEntities {
 	}
 
 	private void createRootCA() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
-			BadCredentialsException, IllegalArgumentException, SignatureException, IOException {
+			BadCredentialsException, IllegalArgumentException, SignatureException, IOException, ClassNotFoundException {
 		rootCA = new RootCA();
 		Logger.shortPrint("");
 	}
@@ -43,10 +43,10 @@ public class PKIEntities {
 			SignatureException, IOException, BadCredentialsException {
 		enrolmentCA = new EnrolmentCA();
 
-		enrolmentCA.setCertificate(rootCA.getEnrollmentCaCertificate());
-		enrolmentCA.setSigningKeys(rootCA.getEnrollmentCaSigningKeys());
-		enrolmentCA.setEncrptionKeys(rootCA.getEnrollmentCaEncryptionKeys());
-		enrolmentCA.setEnrolmentCaChain(rootCA.getEnrollmentCaChain());
+		enrolmentCA.setCertificate(rootCA.getEnrolmentCaCertificate());
+		enrolmentCA.setSigningKeys(rootCA.getEnrolmentCaSigningKeys());
+		enrolmentCA.setEncrptionKeys(rootCA.getEnrolmentCaEncryptionKeys());
+		enrolmentCA.setEnrolmentCaChain(rootCA.getEnrolmentCaChain());
 	}
 
 	private void createAuthorizationCA() throws IllegalArgumentException, NoSuchAlgorithmException,
@@ -121,7 +121,7 @@ public class PKIEntities {
 			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
 		receivingItsStation = new ReceivingITSS();
 		receivingItsStation.setAuthorityCACertificate(authorizationCA.getCertificate());
-		receivingItsStation.setRootCACertificate(rootCA.getMyCertificate());
+		receivingItsStation.setRootCACertificate(rootCA.getRootCaCertificate());
 
 		return this.receivingItsStation;
 	}
@@ -129,24 +129,6 @@ public class PKIEntities {
 	public void generateCTL() {
 		try {
 			this.rootCA.generateCTL();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public void readCTL(String filename) {
-		try {
-			this.rootCA.readCTL(filename);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	public void readCTL_cohda(String filename) {
-		try {
-			this.rootCA.readCTL_cohda(filename);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
