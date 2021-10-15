@@ -85,7 +85,7 @@ public class RootCA {
 
 	private KeyPair enrolmentCaSigningKeys;
 
-	private EtsiTs103097Certificate[] enrollmentCaChain;
+	private EtsiTs103097Certificate[] enrolmentCaChain;
 
 	// Crypto stuff for the AUTHORIZATION CA
 	private KeyPair authorizationCaEncryptionKeys;
@@ -214,7 +214,7 @@ public class RootCA {
 
 		String eAName = "EA.samuCA.autostrade.it";
 		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000);
-		ValidityPeriod enrollmentCAValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 37);
+		ValidityPeriod enrolmentCAValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 37);
 		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
 		PublicKey verificationPublicKey = this.enrolmentCaSigningKeys.getPublic();
@@ -226,7 +226,7 @@ public class RootCA {
 		PublicKey encryptionPublicKey = this.enrolmentCaEncryptionKeys.getPublic();
 
 		this.enrolmentCaCertificate = this.authorityCertGenerator.genEnrollmentCA(eAName, //
-				enrollmentCAValidityPeriod, //
+				enrolmentCAValidityPeriod, //
 				this.geographicRegion, //
 				subjectAssurance, //
 				signingPublicKeyAlgorithm, //
@@ -238,7 +238,7 @@ public class RootCA {
 				publicKeyEncryptionAlgorithm, //
 				encryptionPublicKey //
 		);
-		this.enrollmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
+		this.enrolmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
 
 		writeCertificateToFile(this.enrolmentCaCertificate, Constants.ENROLMENT_CA_CERTIFICATE_FILE);
 		Logger.shortPrint("[root CA         ] Enrolment CA certificate written to file");
@@ -256,9 +256,9 @@ public class RootCA {
 		this.enrolmentCaEncryptionKeys = new KeyPair(publicEncryptionKey, privateEncryptionKey);
 		
 		this.enrolmentCaCertificate = readCertificateFromFile(Constants.ENROLMENT_CA_CERTIFICATE_FILE);
-		this.enrollmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
+		this.enrolmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
 
-		Logger.shortPrint("[root CA         ] Enrolment CA certificate written to file");
+		Logger.shortPrint("[root CA         ] Enrolment CA certificate read from file");
 	}
 
 	private void createAuthorizationCaCertificateAndKeyPairs()
@@ -324,7 +324,7 @@ public class RootCA {
 		this.authorizationCAChain = new EtsiTs103097Certificate[] { this.authorizationCaCertificate,
 				this.rootCaCertificate };
 
-		Logger.shortPrint("[root CA         ] Authorization CA certificate written to file");
+		Logger.shortPrint("[root CA         ] Authorization CA certificate read from file");
 	}
 
 	static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
@@ -489,7 +489,7 @@ public class RootCA {
 	}
 
 	public EtsiTs103097Certificate[] getEnrolmentCaChain() {
-		return this.enrollmentCaChain;
+		return this.enrolmentCaChain;
 	}
 
 	public EtsiTs103097Certificate getAuthorizationCaCertificate() {
