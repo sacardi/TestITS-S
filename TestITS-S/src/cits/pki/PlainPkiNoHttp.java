@@ -1,4 +1,4 @@
-package it.mascanc.its.security;
+package cits.pki;
 //import akka.actor.typed.ActorSystem;
 
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.security.SignatureException;
 
 import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
 
-public class Main {
+public class PlainPkiNoHttp {
 	private static PKIEntities pki;
 	private static SendingITSS sendingITSS;
 	private static ReceivingITSS receivingITSS;

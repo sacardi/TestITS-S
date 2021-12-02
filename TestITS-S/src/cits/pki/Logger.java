@@ -1,4 +1,4 @@
-package it.mascanc.its.security;
+package cits.pki;
 
 public class Logger {
 	public enum VerbosityLevel {

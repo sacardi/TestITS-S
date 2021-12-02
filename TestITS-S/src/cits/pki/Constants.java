@@ -1,4 +1,4 @@
-package it.mascanc.its.security;
+package cits.pki;
 
 public class Constants {
 	public final static int REGION_ITALY = 380;

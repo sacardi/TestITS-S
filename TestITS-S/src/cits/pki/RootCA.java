@@ -1,4 +1,4 @@
-package it.mascanc.its.security;
+package cits.pki;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
