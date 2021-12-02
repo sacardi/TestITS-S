@@ -2,7 +2,6 @@ package cits.pki;
 
 import java.util.concurrent.CompletionStage;
 
-import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
@@ -12,55 +11,38 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
 import akka.http.javadsl.server.Route;
-import cits.pki.HttpPki.Message;
 
-public class HttpPki {
+public class CitsHttpServer {
 
-	interface Message {
-	}
-
-	private static final class StartFailed implements Message {
-		final Throwable ex;
-
-		public StartFailed(Throwable ex) {
-			this.ex = ex;
-		}
-	}
-
-	private static final class Started implements Message {
-		final ServerBinding binding;
-
-		public Started(ServerBinding binding) {
-			this.binding = binding;
-		}
-	}
-
-	private static final class Stop implements Message {
-	}
-	
-	private static ActorSystem<HttpPki.Message> system;
+	private static ActorSystem<CitsHttpServer.Message> system;
 	private static PKIEntities pki;
-	private static SendingITSS sendingITSS;
-	private static ReceivingITSS receivingITSS;
 
-	
-	private static void createActorSystem() {
-		system = ActorSystem.create(HttpPki.create("localhost", 8080), "SamuPki");
-		if (system == null) {
-			System.out.println("Error: system is null");
-			System.exit(1);
-		}
+	public static void main(String[] args) throws Exception {
+		setLogVerbosityToShortMessages();
+
+		createPkiEntities();
+
+		createActorSystem();
 	}
-	
-	public static Behavior<Message> create(String host, Integer port) {
+
+	private static void createActorSystem() {
+		system = ActorSystem.create(startServerAtLocalhost8080(), "SamuPkiActorSystem");
+
+		exitIfSystemIsNull();
+	}
+
+	private static Behavior<Message> startServerAtLocalhost8080() {
+		return CitsHttpServer.start("localhost", 8080);
+	}
+
+	public static Behavior<Message> start(String host, Integer port) {
 		return Behaviors.setup(ctx -> {
 
-			createPkiInfrastructure();
-
-			Route routes = createRoutes(ctx);
+			Route routes = createHttpRoutes();
 
 			CompletionStage<ServerBinding> serverBinding = startServerAtTargetIpAndPort(host, port, routes);
 
+			// TODO: understand
 			ctx.pipeToSelf(serverBinding, (binding, failure) -> {
 				if (binding != null)
 					return new Started(binding);
@@ -71,9 +53,12 @@ public class HttpPki {
 			return starting(false);
 		});
 	}
-	
-	private static void createPkiInfrastructure() throws Exception {
+
+	private static void createPkiEntities() throws Exception {
 		pki = new PKIEntities();
+		
+		exitIfPkiIsNull();
+		
 		pki.createAuthorities();
 	}
 
@@ -83,7 +68,7 @@ public class HttpPki {
 		return serverBinding;
 	}
 
-	private static Route createRoutes(ActorContext<Message> ctx) {
+	private static Route createHttpRoutes() {
 		Route routes = new PkiRoutes(pki, system).createRoutes();
 		return routes;
 	}
@@ -114,13 +99,43 @@ public class HttpPki {
 				}).build();
 	}
 
-	private static void setVerbosityToShortMessages() {
+	private static void setLogVerbosityToShortMessages() {
 		Logger.setVerbosity(Logger.VerbosityLevel.SHORT_MESSAGES);
 	}
+
+	private static void exitIfPkiIsNull() {
+		if (pki == null) {
+			System.out.println("Error: pki is null");
+			System.exit(1);
+		}
+	}
 	
-	public static void main(String[] args) {
-		setVerbosityToShortMessages();
-		
-		createActorSystem();
+	private static void exitIfSystemIsNull() {
+		if (system == null) {
+			System.out.println("Error: system is null");
+			System.exit(1);
+		}
+	}
+
+	interface Message {
+	}
+
+	private static final class StartFailed implements Message {
+		final Throwable ex;
+
+		public StartFailed(Throwable ex) {
+			this.ex = ex;
+		}
+	}
+
+	private static final class Started implements Message {
+		final ServerBinding binding;
+
+		public Started(ServerBinding binding) {
+			this.binding = binding;
+		}
+	}
+
+	private static final class Stop implements Message {
 	}
 }

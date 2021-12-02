@@ -36,11 +36,11 @@ import static akka.http.javadsl.server.Directives.*;
  * Routes for use with the HttpServerWithActorsSample
  */
 public class PkiRoutes {
-	private final ActorSystem<HttpPki.Message> system;
+	private final ActorSystem<CitsHttpServer.Message> system;
 	private final ExceptionHandler exceptionHandler;
 	private final PKIEntities pkiEntities;
 
-	public PkiRoutes(PKIEntities pki, ActorSystem<HttpPki.Message> sys) {
+	public PkiRoutes(PKIEntities pki, ActorSystem<CitsHttpServer.Message> sys) {
 		this.exceptionHandler = getExceptionHandler();
 		this.pkiEntities = pki;
 		this.system = sys;
@@ -58,11 +58,11 @@ public class PkiRoutes {
 
 	private Supplier<Route> createRoutesWithExceptionHandling() {
 		Supplier<Route> innerRoutesWithExceptionHandling = () -> handleExceptions(this.exceptionHandler,
-				() -> createRoutesForEtsi102941());
+				() -> createRoutesForEtsi102941Requests());
 		return innerRoutesWithExceptionHandling;
 	}
 
-	private Route createRoutesForEtsi102941() {
+	private Route createRoutesForEtsi102941Requests() {
 		return pathPrefix(PathMatchers.segment("samuCA"), () -> {
 			Route rootCaRoutes = createRoutesForRootCa();
 			Route enrolmentCaRoutes = createRoutesForEnrolmentCa();
