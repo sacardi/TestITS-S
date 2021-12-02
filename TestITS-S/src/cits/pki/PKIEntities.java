@@ -95,11 +95,23 @@ public class PKIEntities {
 
 	private void makeItsStationEnrolment() throws Exception, IOException, GeneralSecurityException,
 			MessageParsingException, SignatureVerificationException, DecryptionFailedException, InternalErrorException {
-		byte[] enrolmentMsgToSendToEnrolmentCa = this.sendingItsStation.requestEnrolmentMessage();
+		byte[] enrolmentMsgToSendToEnrolmentCa = getEnrolmentMessage();
 
-		byte[] enrollmentResponse = this.enrolmentCA.enrollITS(enrolmentMsgToSendToEnrolmentCa);
+		byte[] enrollmentResponse = getEnrolmentResponseFromEnrolmentCa(enrolmentMsgToSendToEnrolmentCa);
 
 		this.sendingItsStation.finishEnrolment(enrollmentResponse);
+	}
+
+	private byte[] getEnrolmentMessage() throws Exception {
+		byte[] enrolmentMsgToSendToEnrolmentCa = this.sendingItsStation.requestEnrolmentMessage();
+		return enrolmentMsgToSendToEnrolmentCa;
+	}
+	
+	public byte[] getEnrolmentResponseFromEnrolmentCa(byte[] enrolmentMsgToSendToEnrolmentCa)
+			throws IOException, GeneralSecurityException, MessageParsingException, SignatureVerificationException,
+			DecryptionFailedException, InternalErrorException {
+		byte[] enrollmentResponse = this.enrolmentCA.enrollITS(enrolmentMsgToSendToEnrolmentCa);
+		return enrollmentResponse;
 	}
 
 	private void makeAuthorizationRequest()

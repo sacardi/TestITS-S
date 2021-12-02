@@ -220,7 +220,11 @@ public class EnrolmentCA implements Runnable {
 
 		InnerEcResponse innerEcResponse = null;
 
-		boolean sendingItssIsKnown = SendingItsStations.containsKey(new String(itssId));
+		// XXX: UNCOMMENT / CHANGE -- begin
+		// here I should check that the itsID is one of the S-ITSS that I've already visited
+//		boolean sendingItssIsKnown = SendingItsStations.containsKey(new String(itssId));
+		boolean sendingItssIsKnown = true;
+		// XXX: UNCOMMENT / CHANGE -- end
 		if (sendingItssIsKnown) {
 			EtsiTs103097Certificate enrolmentCredential = createEnrolmentCredentialForItss();
 			innerEcResponse = createPositiveInnerEcResponse(enrolmentRequestResult, enrolmentCredential);
