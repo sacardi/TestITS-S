@@ -96,8 +96,7 @@ public class RootCA {
 
 	private EtsiTs103097Certificate[] authorizationCAChain;
 
-	public RootCA() throws IllegalArgumentException, SignatureException, IOException, InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException, ClassNotFoundException {
+	public RootCA() throws Exception {
 		init();
 
 		if (Constants.READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM) {
@@ -113,6 +112,8 @@ public class RootCA {
 
 			createAuthorizationCaCertificateAndKeyPairs();
 		}
+		
+		generateCTL();
 	}
 
 	private void init() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,

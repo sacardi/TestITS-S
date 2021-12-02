@@ -5,7 +5,9 @@ import static org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
@@ -209,7 +211,7 @@ public class SendingITSS {
 		SignatureChoices signatureScheme = Signature.SignatureChoices.ecdsaNistP256Signature;
 		try {
 			// Create a ETSITS102941MessagesCaGenerator generator
-			messagesCaGenerator = new ETSITS102941MessagesCaGenerator(versionToGenerate, //
+			this.messagesCaGenerator = new ETSITS102941MessagesCaGenerator(versionToGenerate, //
 					this.cryptoManager, //
 					digestAlgorithm, //
 					signatureScheme);
@@ -379,6 +381,9 @@ public class SendingITSS {
 		Logger.debugPrint("[sending ITSS    ] 1) RequestEnrolmentMessage generated. I am " + myID
 				+ " and the request is " + innerEcRequest);
 		Logger.shortPrint("[sending ITSS    ] 1) RequestEnrolmentMessage generated. I am " + myID);
+
+		writeEnrolmentRequestMessageToFile(initialEnrolmentRequestMessageResult.getEncryptedData().getEncoded(),
+				Constants.SENDING_ITSS_ENROLMENT_REQUEST_MESSAGE);
 
 		return this.initialEnrolmentRequestMessageResult.getEncryptedData().getEncoded();
 	}
@@ -711,7 +716,7 @@ public class SendingITSS {
 				signerCertificate, //
 				signerPrivateKey);
 
-		//System.out.println(denm.toString());
+		// System.out.println(denm.toString());
 		return denm;
 	}
 
@@ -812,6 +817,19 @@ public class SendingITSS {
 				.getEncryptedData();
 		return encryptedAndSignedMessage.getEncoded();
 
+	}
+
+	private void writeEnrolmentRequestMessageToFile(byte[] message, String filename) throws IOException {
+		if (message == null) {
+			System.out.println("ERROR: key for " + filename + "is null.");
+			System.exit(1);
+		}
+		FileOutputStream fileOutputStream = new FileOutputStream(filename);
+//		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+//		objectOutputStream.writeObject(message);
+//		objectOutputStream.close();
+		fileOutputStream.write(message);
+		fileOutputStream.close();
 	}
 
 	public String getMyID() {

@@ -30,16 +30,14 @@ public class Main {
 
 		// byte[] denm = sendingITSS.getDenm("Hello".getBytes());
 
-		pki.generateCTL();
+//		pki.generateCTL();
 	}
 
 	private static void setVerbosityToShortMessages() {
 		Logger.setVerbosity(Logger.VerbosityLevel.SHORT_MESSAGES);
 	}
 
-	private static void createPkiInfrastructure() throws NoSuchAlgorithmException, NoSuchProviderException,
-			SignatureException, IOException, BadCredentialsException, InvalidKeyException,
-			IllegalArgumentException, ClassNotFoundException {
+	private static void createPkiInfrastructure() throws Exception {
 		pki = new PKIEntities();
 		pki.createAuthorities();
 	}

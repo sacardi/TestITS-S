@@ -25,16 +25,14 @@ public class PKIEntities {
 	public PKIEntities() {
 	}
 
-	public void createAuthorities() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
-			SignatureException, IOException, BadCredentialsException, InvalidKeyException, ClassNotFoundException {
+	public void createAuthorities() throws Exception {
 		createRootCA();
 		createEnrolmentCA();
 		createAuthorizationCA();
 		Logger.shortPrint("");
 	}
 
-	private void createRootCA() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
-			BadCredentialsException, IllegalArgumentException, SignatureException, IOException, ClassNotFoundException {
+	private void createRootCA() throws Exception {
 		rootCA = new RootCA();
 		Logger.shortPrint("");
 	}
@@ -126,12 +124,12 @@ public class PKIEntities {
 		return this.receivingItsStation;
 	}
 
-	public void generateCTL() {
-		try {
-			this.rootCA.generateCTL();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+//	public void generateCTL() {
+//		try {
+//			this.rootCA.generateCTL();
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
 }
