@@ -373,10 +373,10 @@ public class RootCA {
 		final boolean isFullCtl = true;
 		final int ctlSequence = 0;
 
-		final Url itsAccessPoint = new Url("http://localhost/dummy/itss");
-		final Url eaAccessPoint = new Url("http://localhost/dummy/ea");
-		final Url aaAccessPoint = new Url("http://localhost/dummy/aa");
-		final Url dcAccessPoint = new Url("http://localhost/dummy/dc");
+		final Url itsAccessPoint = new Url("http://localhost:8080/samuCA/itss/dummy");
+		final Url eaAccessPoint = new Url("http://localhost:8080/samuCA/enrolmentCA/");
+		final Url aaAccessPoint = new Url("http://localhost:8080/samuCA/authorizationCA");
+		final Url dcAccessPoint = new Url("http://localhost:8080/samuCA/dummy");
 
 		HashedId8[] certificateDigests = { new HashedId8(this.rootCaCertificate.getEncoded()) };
 

@@ -28,6 +28,7 @@ import akka.http.javadsl.server.ExceptionHandler;
 import akka.http.javadsl.server.PathMatchers;
 import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
+import cits.pki.httpserver.HttpServerMessages;
 import scala.concurrent.duration.FiniteDuration;
 
 import static akka.http.javadsl.server.Directives.*;
@@ -36,11 +37,11 @@ import static akka.http.javadsl.server.Directives.*;
  * Routes for use with the HttpServerWithActorsSample
  */
 public class PkiRoutes {
-	private final ActorSystem<CitsHttpServer.Message> system;
+	private final ActorSystem<HttpServerMessages.Message> system;
 	private final ExceptionHandler exceptionHandler;
 	private final PKIEntities pkiEntities;
 
-	public PkiRoutes(PKIEntities pki, ActorSystem<CitsHttpServer.Message> sys) {
+	public PkiRoutes(PKIEntities pki, ActorSystem<HttpServerMessages.Message> sys) {
 		this.exceptionHandler = getExceptionHandler();
 		this.pkiEntities = pki;
 		this.system = sys;
@@ -106,11 +107,11 @@ public class PkiRoutes {
 
 							writeEnrolmentRequestMessageToFile(enrolmentRequestMessage);
 
-							byte[] enrolmentResponseMessage = pkiEntities.getEnrolmentResponseFromEnrolmentCa(requestBody);
+							byte[] enrolmentResponseMessage = pkiEntities
+									.getEnrolmentResponseFromEnrolmentCa(requestBody);
 
 							return complete(StatusCodes.OK,
 									HttpEntities.create(customContentType, enrolmentResponseMessage));
-//							String result = (String) Await.result(future, timeout);
 						} catch (IOException | MessageParsingException | SignatureVerificationException
 								| DecryptionFailedException | InternalErrorException | GeneralSecurityException e1) {
 
