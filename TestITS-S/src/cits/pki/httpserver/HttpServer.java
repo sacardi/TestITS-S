@@ -13,43 +13,56 @@ import akka.http.javadsl.server.Route;
 import akka.japi.function.Function;
 import cits.pki.PKIEntities;
 import cits.pki.PkiRoutes;
-
+import cits.pki.httpserver.HttpServerMessages.Message;
 import akka.actor.typed.ActorSystem;
 
 public class HttpServer {
 
+	private ActorSystem<HttpServerMessages.Message> system;
+	private PKIEntities pki;
 
-	private static ActorSystem<HttpServerMessages.Message> system;
-	private static PKIEntities pki;
-	
-	public HttpServer(PKIEntities entities)
-	{
-		pki = entities;
+	private String address = "localhost";
+	private Integer port = 8080;
+
+	public HttpServer(PKIEntities pki) {
+		this.pki = pki;
+
 		createActorSystem();
 	}
 
-
 	private void createActorSystem() {
-		system = ActorSystem.create(startServerAtLocalhost8080(), "SamuPkiActorSystem");
-		
+		this.system = ActorSystem.create(startServer(), "SamuPkiActorSystem");
+
 		exitIfSystemIsNull();
 	}
-	
 
-	private static Behavior<HttpServerMessages.Message> startServerAtLocalhost8080() {
-		return start("localhost", 8080);
+	public Behavior<HttpServerMessages.Message> startServer() {
+		return Behaviors.setup(ctx -> {
+
+			Route httpRoutes = createHttpRoutes();
+
+			startServerWithCustomHttpRoutes(ctx, httpRoutes);
+
+			return starting(false);
+		});
 	}
-	
-	private static void exitIfSystemIsNull() {
-		if (system == null) {
+
+	private void startServerWithCustomHttpRoutes(ActorContext<Message> ctx, Route httpRoutes) {
+		CompletionStage<ServerBinding> serverBinding = bindServer(httpRoutes);
+
+		ifBindingWasSuccessfulSendServerBindingMessageToSelf(ctx, serverBinding);
+	}
+
+	private void exitIfSystemIsNull() {
+		if (this.system == null) {
 			System.out.println("Error: system is null");
 			System.exit(1);
 		}
 	}
-	
-	public static void sendServerBindingMessageToSelfIfBindingWasSuccessful(
-			ActorContext<HttpServerMessages.Message> ctx, CompletionStage<ServerBinding> serverBinding) {
-		// TODO: understand
+
+	public void ifBindingWasSuccessfulSendServerBindingMessageToSelf(ActorContext<HttpServerMessages.Message> ctx,
+			CompletionStage<ServerBinding> serverBinding) {
+
 		ctx.pipeToSelf(serverBinding, (binding, failure) -> {
 			if (binding != null)
 				return new HttpServerMessages.Started(binding);
@@ -58,35 +71,22 @@ public class HttpServer {
 		});
 	}
 
-	public static Behavior<HttpServerMessages.Message> start(String host, Integer port) {
-		return Behaviors.setup(ctx -> {
-
-			Route routes = createHttpRoutes();
-
-			CompletionStage<ServerBinding> serverBinding = startServerAtTargetIpAndPort(host, port, routes);
-
-			HttpServer.sendServerBindingMessageToSelfIfBindingWasSuccessful(ctx, serverBinding);
-
-			return HttpServer.starting(false);
-		});
-	}
-
-	private static CompletionStage<ServerBinding> startServerAtTargetIpAndPort(String host, Integer port,
-			Route routes) {
-		CompletionStage<ServerBinding> serverBinding = Http.get(system).newServerAt(host, port).bind(routes);
+	private CompletionStage<ServerBinding> bindServer(Route routes) {
+		CompletionStage<ServerBinding> serverBinding = Http.get(system).newServerAt(this.address, this.port)
+				.bind(routes);
 		return serverBinding;
 	}
 
-	private static Route createHttpRoutes() {
+	private Route createHttpRoutes() {
 		Route routes = new PkiRoutes(pki, system).createRoutes();
 		return routes;
 	}
 
-	private static Behavior<HttpServerMessages.Message> starting(boolean wasStopped) {
+	private Behavior<HttpServerMessages.Message> starting(boolean wasStopped) {
 		return Behaviors.setup(ctx -> createMessageHandlers(wasStopped, ctx));
 	}
 
-	private static Behavior<HttpServerMessages.Message> createMessageHandlers(boolean wasStopped,
+	private Behavior<HttpServerMessages.Message> createMessageHandlers(boolean wasStopped,
 			ActorContext<HttpServerMessages.Message> ctx) {
 		return BehaviorBuilder.<HttpServerMessages.Message>create()
 				.onMessage(HttpServerMessages.StartFailed.class, handleStartFailedMessage())
@@ -94,13 +94,13 @@ public class HttpServer {
 				.onMessage(HttpServerMessages.Stop.class, handleStopMessage()).build();
 	}
 
-	private static Function<HttpServerMessages.StartFailed, Behavior<HttpServerMessages.Message>> handleStartFailedMessage() {
+	private Function<HttpServerMessages.StartFailed, Behavior<HttpServerMessages.Message>> handleStartFailedMessage() {
 		return failed -> {
 			throw new RuntimeException("Server failed to start", failed.ex);
 		};
 	}
 
-	private static Function<HttpServerMessages.Stop, Behavior<HttpServerMessages.Message>> handleStopMessage() {
+	private Function<HttpServerMessages.Stop, Behavior<HttpServerMessages.Message>> handleStopMessage() {
 		return s -> {
 			// we got a stop message but haven't completed starting yet,
 			// we cannot stop until starting has completed
@@ -108,7 +108,7 @@ public class HttpServer {
 		};
 	}
 
-	private static Function<HttpServerMessages.Started, Behavior<HttpServerMessages.Message>> handleStartedMessage(
+	private Function<HttpServerMessages.Started, Behavior<HttpServerMessages.Message>> handleStartedMessage(
 			boolean wasStopped, ActorContext<HttpServerMessages.Message> ctx) {
 		return msg -> {
 			ctx.getLog().info("Server online at http://{}:{}", msg.binding.localAddress().getAddress(),
@@ -121,7 +121,7 @@ public class HttpServer {
 		};
 	}
 
-	private static Behavior<HttpServerMessages.Message> running(ServerBinding binding) {
+	private Behavior<HttpServerMessages.Message> running(ServerBinding binding) {
 		return BehaviorBuilder.<HttpServerMessages.Message>create()
 				.onMessage(HttpServerMessages.Stop.class, msg -> Behaviors.stopped()).onSignal(PostStop.class, msg -> {
 					binding.unbind();

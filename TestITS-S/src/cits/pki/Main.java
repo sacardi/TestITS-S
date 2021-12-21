@@ -1,21 +1,8 @@
 package cits.pki;
 
-import java.util.concurrent.CompletionStage;
-
-import akka.actor.typed.ActorSystem;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.PostStop;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.BehaviorBuilder;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.http.javadsl.Http;
-import akka.http.javadsl.ServerBinding;
-import akka.http.javadsl.server.Route;
-import akka.japi.function.Function;
 import cits.pki.httpserver.HttpServer;
-import cits.pki.httpserver.HttpServerMessages;
 
-public class MainFile {
+public class Main {
 
 	private static PKIEntities pki;
 	private static HttpServer server;
@@ -32,8 +19,6 @@ public class MainFile {
 		pki = new PKIEntities();
 
 		exitIfPkiIsNull();
-
-		pki.createAuthorities();
 	}
 
 	private static void startServer() {

@@ -22,10 +22,11 @@ public class PKIEntities {
 	private SendingITSS sendingItsStation;
 	private ReceivingITSS receivingItsStation;
 
-	public PKIEntities() {
+	public PKIEntities() throws Exception {
+		createCertificationAuthorities();
 	}
 
-	public void createAuthorities() throws Exception {
+	private void createCertificationAuthorities() throws Exception {
 		createRootCA();
 		createEnrolmentCA();
 		createAuthorizationCA();
