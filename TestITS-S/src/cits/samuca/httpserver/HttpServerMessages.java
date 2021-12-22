@@ -14,10 +14,10 @@ public class HttpServerMessages {
 		}
 	}
 
-	public static final class Started implements Message {
+	public static final class StartSucceeded implements Message {
 		final ServerBinding binding;
 
-		public Started(ServerBinding binding) {
+		public StartSucceeded(ServerBinding binding) {
 			this.binding = binding;
 		}
 	}
