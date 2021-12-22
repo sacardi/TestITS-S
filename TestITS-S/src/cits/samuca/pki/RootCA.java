@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.pki;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -58,6 +58,10 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.Certific
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.CertificateType;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.VerificationKeyIndicator;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
+
+import cits.samuca.utils.Constants;
+import cits.samuca.utils.Logger;
+
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature;
 
 public class RootCA {

@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.itss;
 
 import static org.certificateservices.custom.c2x.etsits103097.v131.AvailableITSAID.SecuredCertificateRequestService;
 import static org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PublicVerificationKey.PublicVerificationKeyChoices.ecdsaNistP256;
@@ -91,6 +91,9 @@ import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.PreSha
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Receiver;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.recipient.CertificateRecipient;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.recipient.Recipient;
+
+import cits.samuca.utils.Constants;
+import cits.samuca.utils.Logger;
 
 /**
  * This is the sending ITS.

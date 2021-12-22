@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca;
 //import akka.actor.typed.ActorSystem;
 
 import java.io.IOException;
@@ -9,6 +9,11 @@ import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 
 import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
+
+import cits.samuca.itss.ReceivingITSS;
+import cits.samuca.itss.SendingITSS;
+import cits.samuca.pki.PKIEntities;
+import cits.samuca.utils.Logger;
 
 public class PlainPkiNoHttp {
 	private static PKIEntities pki;
@@ -39,7 +44,6 @@ public class PlainPkiNoHttp {
 
 	private static void createPkiInfrastructure() throws Exception {
 		pki = new PKIEntities();
-		pki.createAuthorities();
 	}
 
 	private static void createSendingITSS() throws Exception {

@@ -1,4 +1,4 @@
-package cits.pki.httpserver;
+package cits.samuca.httpserver;
 
 import java.util.concurrent.CompletionStage;
 
@@ -11,14 +11,13 @@ import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
 import akka.http.javadsl.server.Route;
 import akka.japi.function.Function;
-import cits.pki.PKIEntities;
-import cits.pki.PkiRoutes;
-import cits.pki.httpserver.HttpServerMessages.Message;
+import cits.samuca.httpserver.HttpServerMessages.Message;
+import cits.samuca.pki.PKIEntities;
 import akka.actor.typed.ActorSystem;
 
 public class HttpServer {
 
-	private ActorSystem<HttpServerMessages.Message> system;
+	private ActorSystem<HttpServerMessages.Message> actorSystem;
 	private PKIEntities pki;
 
 	private String address = "localhost";
@@ -31,7 +30,7 @@ public class HttpServer {
 	}
 
 	private void createActorSystem() {
-		this.system = ActorSystem.create(startServer(), "SamuPkiActorSystem");
+		this.actorSystem = ActorSystem.create(startServer(), "SamuPkiActorSystem");
 
 		exitIfSystemIsNull();
 	}
@@ -47,18 +46,24 @@ public class HttpServer {
 		});
 	}
 
+	private Route createHttpRoutes() {
+		Route routes = new PkiRoutes(this.pki, this.actorSystem).createRoutes();
+		return routes;
+	}
+
 	private void startServerWithCustomHttpRoutes(ActorContext<Message> ctx, Route httpRoutes) {
-		CompletionStage<ServerBinding> serverBinding = bindServer(httpRoutes);
+		CompletionStage<ServerBinding> serverBinding = createServerAndBindRoutes(httpRoutes);
 
 		ifBindingWasSuccessfulSendServerBindingMessageToSelf(ctx, serverBinding);
 	}
 
-	private void exitIfSystemIsNull() {
-		if (this.system == null) {
-			System.out.println("Error: system is null");
-			System.exit(1);
-		}
+	private CompletionStage<ServerBinding> createServerAndBindRoutes(Route routes) {
+		CompletionStage<ServerBinding> serverBinding = Http.get(this.actorSystem).newServerAt(this.address, this.port)
+				.bind(routes);
+		return serverBinding;
 	}
+
+
 
 	public void ifBindingWasSuccessfulSendServerBindingMessageToSelf(ActorContext<HttpServerMessages.Message> ctx,
 			CompletionStage<ServerBinding> serverBinding) {
@@ -69,17 +74,6 @@ public class HttpServer {
 			else
 				return new HttpServerMessages.StartFailed(failure);
 		});
-	}
-
-	private CompletionStage<ServerBinding> bindServer(Route routes) {
-		CompletionStage<ServerBinding> serverBinding = Http.get(system).newServerAt(this.address, this.port)
-				.bind(routes);
-		return serverBinding;
-	}
-
-	private Route createHttpRoutes() {
-		Route routes = new PkiRoutes(pki, system).createRoutes();
-		return routes;
 	}
 
 	private Behavior<HttpServerMessages.Message> starting(boolean wasStopped) {
@@ -127,6 +121,13 @@ public class HttpServer {
 					binding.unbind();
 					return Behaviors.same();
 				}).build();
+	}
+	
+	private void exitIfSystemIsNull() {
+		if (this.actorSystem == null) {
+			System.out.println("Error: system is null");
+			System.exit(1);
+		}
 	}
 
 }

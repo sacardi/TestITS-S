@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.utils;
 
 public class Constants {
 	public final static int REGION_ITALY = 380;

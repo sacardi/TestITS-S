@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.httpserver;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import akka.http.javadsl.server.ExceptionHandler;
 import akka.http.javadsl.server.PathMatchers;
 import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
-import cits.pki.httpserver.HttpServerMessages;
+import cits.samuca.pki.PKIEntities;
 import scala.concurrent.duration.FiniteDuration;
 
 import static akka.http.javadsl.server.Directives.*;

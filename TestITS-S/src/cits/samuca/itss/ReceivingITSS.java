@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.itss;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -17,6 +17,8 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashAlg
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature.SignatureChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.Certificate;
+
+import cits.samuca.utils.Logger;
 
 /**
  * Simulates a receiving ITS-S, e.g., a OBE It receives a CAM (signed) and

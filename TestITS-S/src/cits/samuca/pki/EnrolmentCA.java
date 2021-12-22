@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.pki;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -49,6 +49,9 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Validit
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.CertificateReciever;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Receiver;
+
+import cits.samuca.utils.Constants;
+import cits.samuca.utils.Logger;
 
 /**
  * They are defined in section 7.2.4, Subordinate certification authority

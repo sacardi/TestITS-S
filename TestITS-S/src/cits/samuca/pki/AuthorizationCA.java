@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.pki;
 
 import static org.certificateservices.custom.c2x.etsits103097.v131.AvailableITSAID.SecuredCertificateRequestService;
 import static org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PublicVerificationKey.PublicVerificationKeyChoices.ecdsaNistP256;
@@ -52,6 +52,9 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Validit
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.CertificateReciever;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Receiver;
+
+import cits.samuca.utils.Constants;
+import cits.samuca.utils.Logger;
 
 /**
  * Simulates an authorization CA. They are defined in section 7.2.4, Subordinate

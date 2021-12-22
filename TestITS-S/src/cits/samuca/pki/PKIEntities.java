@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.pki;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -13,6 +13,10 @@ import org.certificateservices.custom.c2x.etsits102941.v131.DecryptionFailedExce
 import org.certificateservices.custom.c2x.etsits102941.v131.InternalErrorException;
 import org.certificateservices.custom.c2x.etsits102941.v131.MessageParsingException;
 import org.certificateservices.custom.c2x.etsits102941.v131.SignatureVerificationException;
+
+import cits.samuca.itss.ReceivingITSS;
+import cits.samuca.itss.SendingITSS;
+import cits.samuca.utils.Logger;
 
 public class PKIEntities {
 

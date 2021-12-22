@@ -1,6 +1,8 @@
-package cits.pki;
+package cits.samuca;
 
-import cits.pki.httpserver.HttpServer;
+import cits.samuca.httpserver.HttpServer;
+import cits.samuca.pki.PKIEntities;
+import cits.samuca.utils.Logger;
 
 public class Main {
 

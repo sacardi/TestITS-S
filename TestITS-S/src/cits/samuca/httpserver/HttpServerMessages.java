@@ -1,4 +1,4 @@
-package cits.pki.httpserver;
+package cits.samuca.httpserver;
 
 import akka.http.javadsl.ServerBinding;
 

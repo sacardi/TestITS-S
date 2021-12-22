@@ -1,4 +1,4 @@
-package cits.pki;
+package cits.samuca.utils;
 
 public class Logger {
 	public enum VerbosityLevel {
