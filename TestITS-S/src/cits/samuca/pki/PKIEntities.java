@@ -2,7 +2,6 @@ package cits.samuca.pki;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
@@ -20,7 +19,7 @@ import cits.samuca.utils.Logger;
 
 public class PKIEntities {
 
-	private RootCA rootCA;
+	private RootCa rootCA;
 	private EnrolmentCA enrolmentCA;
 	private AuthorizationCA authorizationCA;
 	private SendingITSS sendingItsStation;
@@ -38,7 +37,7 @@ public class PKIEntities {
 	}
 
 	private void createRootCA() throws Exception {
-		rootCA = new RootCA();
+		rootCA = new RootCa();
 		Logger.shortPrint("");
 	}
 

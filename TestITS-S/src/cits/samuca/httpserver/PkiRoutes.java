@@ -225,10 +225,10 @@ public class PkiRoutes {
 //				delete(() -> onSuccess(deleteAll(), r -> complete("Jobs cleared"))));
 //	}
 
-	private Route onEnroll() {
-		System.out.println("enroll");
-		return complete("Enrolled.");
-	}
+//	private Route onEnroll() {
+//		System.out.println("enroll");
+//		return complete("Enrolled.");
+//	}
 
 //	private Route onGetCtl() {
 //		System.out.println("received request for CTL");

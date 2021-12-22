@@ -1,8 +1,6 @@
 package cits.samuca.pki;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -34,7 +32,6 @@ import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.enrollme
 import org.certificateservices.custom.c2x.etsits102941.v131.generator.ETSITS102941MessagesCaGenerator;
 import org.certificateservices.custom.c2x.etsits102941.v131.generator.RequestVerifyResult;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
-import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIAuthorityCertGenerator;
 import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIEnrollmentCredentialGenerator;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BasePublicEncryptionKey.BasePublicEncryptionKeyChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Duration.DurationChoices;
