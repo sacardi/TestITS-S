@@ -17,67 +17,129 @@ import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.securedd
 public class IOUtils {
 
 	public static void writeCtlToFile(EtsiTs103097DataSigned certificateTrustListMessage, String filename)
-			throws FileNotFoundException, IOException {
+			throws IOException {
+
+		Logger.shortPrint("[I/O utils       ] writing CTL to " + filename);
+
+		writeEtsiTs103097DataSignedToFile(certificateTrustListMessage, filename);
+	}
+
+	public static void writeCrlToFile(EtsiTs103097DataSigned certificateRevocationListMessage, String filename)
+			throws IOException {
+
+		Logger.shortPrint("[I/O utils       ] writing CRL to " + filename);
+
+		writeEtsiTs103097DataSignedToFile(certificateRevocationListMessage, filename);
+	}
+
+	private static void writeEtsiTs103097DataSignedToFile(EtsiTs103097DataSigned fileToDump, String filename)
+			throws IOException {
+
 		DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(filename));
-		certificateTrustListMessage.encode(dataOutputStream);
+		fileToDump.encode(dataOutputStream);
 		dataOutputStream.close();
 	}
 
 	public static void writeCertificateToFile(EtsiTs103097Certificate certificate, String filename)
 			throws FileNotFoundException, IOException {
+
+		Logger.shortPrint("[I/O utils       ] writing certificate to " + filename);
+
 		DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(filename));
 		certificate.encode(dataOutputStream);
 		dataOutputStream.close();
 	}
-	
+
 	public static EtsiTs103097Certificate readCertificateFromFile(String filename)
 			throws FileNotFoundException, IOException {
+
+		Logger.shortPrint("[I/O utils       ] reading certificate from " + filename);
+
 		DataInputStream dataInputStream = new DataInputStream(new FileInputStream(filename));
-		
+
 		EtsiTs103097Certificate certificate = new EtsiTs103097Certificate();
-		certificate.decode(dataInputStream);;
+		certificate.decode(dataInputStream);
 		dataInputStream.close();
 
 		return certificate;
 	}
 
-	public static void writePrivateKeyToFile(PrivateKey privateKey, String filename) throws IOException {
-		if (privateKey == null) {
-			System.out.println("ERROR: key for " + filename + "is null.");
-			System.exit(1);
-		}
-		FileOutputStream fileOutputStream = new FileOutputStream(filename);
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-		objectOutputStream.writeObject(privateKey);
-		objectOutputStream.close();
+	public static void writePrivateKeyToFile(PrivateKey privateKey, String filename) {
+		Logger.shortPrint("[                ] writing private key to " + filename);
+
+		exitIfNull(privateKey);
+
+		writeObjectToFile_exitOnProblems(privateKey, filename);
 	}
-	
-	public static void writePublicKeyToFile(PublicKey publicKey, String filename) throws IOException {
-		if (publicKey == null) {
-			System.out.println("ERROR: key for " + filename + "is null.");
+
+	public static void writePublicKeyToFile(PublicKey publicKey, String filename) {
+		Logger.shortPrint("[I/O utils       ] writing public key to " + filename);
+
+		exitIfNull(publicKey);
+
+		writeObjectToFile_exitOnProblems(publicKey, filename);
+	}
+
+	private static void writeObjectToFile_exitOnProblems(Object object, String filename) {
+
+		try {
+			writeObjectToFile(object, filename);
+		} catch (IOException e) {
+			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+
+	private static void exitIfNull(Object object) {
+		if (object == null) {
+			Logger.shortPrint("[ERROR           ] trying to dump an empty object");
+			System.exit(1);
+		}
+	}
+
+	private static void writeObjectToFile(Object object, String filename) throws FileNotFoundException, IOException {
 		FileOutputStream fileOutputStream = new FileOutputStream(filename);
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-		objectOutputStream.writeObject(publicKey);
+		objectOutputStream.writeObject(object);
 		objectOutputStream.close();
 	}
 
-	public static PrivateKey readPrivateKeyFromFile(String filename) throws IOException, ClassNotFoundException {
-		FileInputStream fileInputStream = new FileInputStream(filename);
-		ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-		PrivateKey privateKey = (PrivateKey) objectInputStream.readObject();
-		objectInputStream.close();
+	public static PrivateKey readPrivateKeyFromFile(String filename) {
+		Logger.shortPrint("[I/O utils       ] reading private key from " + filename);
+
+		PrivateKey privateKey = (PrivateKey) readObjectFromFile_exitOnProblems(filename);
 
 		return privateKey;
 	}
-	
-	public static PublicKey readPublicKeyFromFile(String filename) throws IOException, ClassNotFoundException {
-		FileInputStream fileInputStream = new FileInputStream(filename);
-		ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-		PublicKey publicKey = (PublicKey) objectInputStream.readObject();
-		objectInputStream.close();
+
+	public static PublicKey readPublicKeyFromFile(String filename) {
+		Logger.shortPrint("[I/O utils       ] reading public key from " + filename);
+
+		PublicKey publicKey = (PublicKey) readObjectFromFile_exitOnProblems(filename);
 
 		return publicKey;
+	}
+
+	private static Object readObjectFromFile_exitOnProblems(String filename) {
+
+		Object object = null;
+
+		try {
+			object = readObjectFromFile(filename);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		return object;
+	}
+
+	private static Object readObjectFromFile(String filename) throws IOException, ClassNotFoundException {
+		Object object;
+		FileInputStream fileInputStream = new FileInputStream(filename);
+		ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+		object = objectInputStream.readObject();
+		objectInputStream.close();
+		return object;
 	}
 }

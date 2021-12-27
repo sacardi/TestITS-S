@@ -33,9 +33,6 @@ import scala.concurrent.duration.FiniteDuration;
 
 import static akka.http.javadsl.server.Directives.*;
 
-/**
- * Routes for use with the HttpServerWithActorsSample
- */
 public class PkiRoutes {
 	private final ActorSystem<HttpServerMessages.Message> system;
 	private final ExceptionHandler exceptionHandler;
@@ -94,7 +91,7 @@ public class PkiRoutes {
 
 		final FiniteDuration threeSecondsTimeout = createThreeSecondsTimeout();
 
-		Route ecRequest = post(() -> path(PathMatchers.segment("ECRequest"),
+		Route ecRequest = post(() -> path(PathMatchers.segment("enrolment"),
 
 				() -> extractStrictEntity(threeSecondsTimeout, entity -> {
 					String contentType = entity.getContentType().toString();
@@ -211,56 +208,4 @@ public class PkiRoutes {
 		}).build();
 	}
 
-//	private CompletionStage<Optional<JobRepository.Job>> onEnroll() {
-//		System.out.println("enroll");
-//		return AskPattern.ask(buildJobRepository, replyTo -> new JobRepository.GetJobById(new Long (1), replyTo),
-//				Duration.ofSeconds(3), system.scheduler());
-//	}
-
-//	private Route onEnroll() {
-//		System.out.println("enroll");
-//		return concat(
-//				post(() -> entity(Jackson.unmarshaller(JobRepository.Job.class),
-//						job -> onSuccess(add(job), r -> complete("Job added")))),
-//				delete(() -> onSuccess(deleteAll(), r -> complete("Jobs cleared"))));
-//	}
-
-//	private Route onEnroll() {
-//		System.out.println("enroll");
-//		return complete("Enrolled.");
-//	}
-
-//	private Route onGetCtl() {
-//		System.out.println("received request for CTL");
-//		final Duration t = Duration.ofSeconds(5);
-//		RootCA.GetCtl request = new RootCA.GetCtl();
-//
-////		CompletableFuture<Object> future = ask(this.rootCA., request, t).toCompletableFuture();
-//		return complete("CTL: ");
-//	}
-
-//	private Route authorize() {
-//		System.out.println("authorize");
-//		return concat(
-//				post(() -> entity(Jackson.unmarshaller(JobRepository.Job.class),
-//						job -> onSuccess(add(job), r -> complete("Job added")))),
-//				delete(() -> onSuccess(deleteAll(), r -> complete("Jobs cleared"))));
-//	}
-
-//	private CompletionStage<Optional<JobRepository.Job>> getJob(Long jobId) {
-//		return AskPattern.ask(buildJobRepository, replyTo -> new JobRepository.GetJobById(jobId, replyTo),
-//				Duration.ofSeconds(3), system.scheduler());
-//	}
-
-//	private CompletionStage<JobRepository.OK> handleKO(CompletionStage<JobRepository.Response> stage) {
-//		return stage.thenApply(response -> {
-//			if (response instanceof JobRepository.OK) {
-//				return (JobRepository.OK) response;
-//			} else if (response instanceof JobRepository.KO) {
-//				throw new IllegalStateException(((JobRepository.KO) response).reason);
-//			} else {
-//				throw new IllegalStateException("Invalid response");
-//			}
-//		});
-//	}
 }

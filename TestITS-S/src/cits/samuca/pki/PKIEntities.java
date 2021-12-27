@@ -61,6 +61,7 @@ public class PKIEntities {
 		authorizationCA.setAuthorizationCaChain(rootCA.getAuthorizationCaChain());
 	}
 
+	// called only by PlainPkiNoHttp
 	public SendingITSS createSendingITSS() throws Exception {
 
 		// The security lifecycle of an ITS-S is:
