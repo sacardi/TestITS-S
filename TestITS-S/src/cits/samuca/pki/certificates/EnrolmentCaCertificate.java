@@ -41,11 +41,7 @@ public class EnrolmentCaCertificate {
 
 	private KeyPair rootCaSigningKeys;
 
-//	private KeyPair rootCaEncryptionKeys;
-
-	public EnrolmentCaCertificate(EtsiTs103097Certificate rootCaCertificate, KeyPair rootCaSigningKeys)
-			throws InvalidKeyException, IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
-			SignatureException, IOException, BadCredentialsException, ClassNotFoundException {
+	public EnrolmentCaCertificate(EtsiTs103097Certificate rootCaCertificate, KeyPair rootCaSigningKeys) {
 
 		this.rootCaCertificate = rootCaCertificate;
 		this.rootCaSigningKeys = rootCaSigningKeys;
@@ -53,9 +49,8 @@ public class EnrolmentCaCertificate {
 		readOrCreateCertificateAndKeyPairs();
 	}
 
-	private void readOrCreateCertificateAndKeyPairs()
-			throws SignatureException, IOException, InvalidKeyException, ClassNotFoundException,
-			IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void readOrCreateCertificateAndKeyPairs() {
+
 		if (Constants.READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM) {
 			readEnrolmentCaCertificateAndKeyPairs();
 		} else {
@@ -63,12 +58,10 @@ public class EnrolmentCaCertificate {
 		}
 	}
 
-	private void createEnrolmentCaCertificateAndKeyPairs()
-			throws IllegalArgumentException, SignatureException, IOException, InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void createEnrolmentCaCertificateAndKeyPairs() {
 
 		DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
-		
+
 		this.enrolmentCaSigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
 		IOUtils.writePrivateKeyToFile(this.enrolmentCaSigningKeys.getPrivate(),
 				Constants.ENROLMENT_CA_SIGNING_KEYS_PRIVATE_KEY_FILE);
@@ -94,14 +87,12 @@ public class EnrolmentCaCertificate {
 		BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm = BasePublicEncryptionKeyChoices.ecdsaNistP256;
 		PublicKey encryptionPublicKey = this.enrolmentCaEncryptionKeys.getPublic();
 
-		
 		ETSIAuthorityCertGenerator authorityCertGenerator = PkiUtilsSingleton.getInstance().getAuthorityCertGenerator();
-		
+
 		GeographicRegion geographicRegion = PkiUtilsSingleton.getInstance().getGeographicRegion();
-		
-		this.enrolmentCaCertificate = authorityCertGenerator.genEnrollmentCA(eAName, //
+
+		createEnrolmentCaCertificate(eAName, //
 				enrolmentCAValidityPeriod, //
-				geographicRegion, //
 				subjectAssurance, //
 				signingPublicKeyAlgorithm, //
 				verificationPublicKey, //
@@ -110,32 +101,78 @@ public class EnrolmentCaCertificate {
 				signerCertificatePrivateKey, //
 				symmetricEncryptionAlgorithm, //
 				publicKeyEncryptionAlgorithm, //
-				encryptionPublicKey //
-		);
+				encryptionPublicKey, //
+				authorityCertGenerator, //
+				geographicRegion);
+
 		this.enrolmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
 
 		IOUtils.writeCertificateToFile(this.enrolmentCaCertificate, Constants.ENROLMENT_CA_CERTIFICATE_FILE);
 		Logger.shortPrint("[root CA         ] Enrolment CA certificate written to file");
 	}
 
-	private void readEnrolmentCaCertificateAndKeyPairs() throws IllegalArgumentException, SignatureException,
-			IOException, InvalidKeyException, ClassNotFoundException {
+	private void createEnrolmentCaCertificate(String eAName, ValidityPeriod enrolmentCAValidityPeriod,
+			SubjectAssurance subjectAssurance, SignatureChoices signingPublicKeyAlgorithm,
+			PublicKey verificationPublicKey, EtsiTs103097Certificate signerCertificate,
+			PublicKey signerCertificatePublicKey, PrivateKey signerCertificatePrivateKey,
+			SymmAlgorithm symmetricEncryptionAlgorithm, BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm,
+			PublicKey encryptionPublicKey, ETSIAuthorityCertGenerator authorityCertGenerator,
+			GeographicRegion geographicRegion) {
 
-		PrivateKey privateSigningKey = IOUtils
-				.readPrivateKeyFromFile(Constants.ENROLMENT_CA_SIGNING_KEYS_PRIVATE_KEY_FILE);
-		PublicKey publicSigningKey = IOUtils.readPublicKeyFromFile(Constants.ENROLMENT_CA_SIGNING_KEYS_PUBLIC_KEY_FILE);
-		this.enrolmentCaSigningKeys = new KeyPair(publicSigningKey, privateSigningKey);
+		try {
+			this.enrolmentCaCertificate = authorityCertGenerator.genEnrollmentCA(eAName, //
+					enrolmentCAValidityPeriod, //
+					geographicRegion, //
+					subjectAssurance, //
+					signingPublicKeyAlgorithm, //
+					verificationPublicKey, //
+					signerCertificate, //
+					signerCertificatePublicKey, //
+					signerCertificatePrivateKey, //
+					symmetricEncryptionAlgorithm, //
+					publicKeyEncryptionAlgorithm, //
+					encryptionPublicKey //
+			);
 
+		} catch (IllegalArgumentException | SignatureException | IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+
+	private void readEnrolmentCaCertificateAndKeyPairs() {
+
+		readEnrolmentCaKeyPairs();
+
+		readEnrolmentCaCertificate();
+	}
+
+	private void readEnrolmentCaCertificate() {
+		this.enrolmentCaCertificate = IOUtils.readCertificateFromFile(Constants.ENROLMENT_CA_CERTIFICATE_FILE);
+		this.enrolmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
+
+		Logger.shortPrint("[root CA         ] Enrolment CA certificate read from file");
+	}
+
+	private void readEnrolmentCaKeyPairs() {
+		readEnrolmentCaSigningKeys();
+
+		readEnrolmentCaEncryptionKeys();
+	}
+
+	private void readEnrolmentCaEncryptionKeys() {
 		PrivateKey privateEncryptionKey = IOUtils
 				.readPrivateKeyFromFile(Constants.ENROLMENT_CA_ENCRYPTION_KEYS_PRIVATE_KEY_FILE);
 		PublicKey publicEncryptionKey = IOUtils
 				.readPublicKeyFromFile(Constants.ENROLMENT_CA_ENCRYPTION_KEYS_PUBLIC_KEY_FILE);
 		this.enrolmentCaEncryptionKeys = new KeyPair(publicEncryptionKey, privateEncryptionKey);
+	}
 
-		this.enrolmentCaCertificate = IOUtils.readCertificateFromFile(Constants.ENROLMENT_CA_CERTIFICATE_FILE);
-		this.enrolmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
-
-		Logger.shortPrint("[root CA         ] Enrolment CA certificate read from file");
+	private void readEnrolmentCaSigningKeys() {
+		PrivateKey privateSigningKey = IOUtils
+				.readPrivateKeyFromFile(Constants.ENROLMENT_CA_SIGNING_KEYS_PRIVATE_KEY_FILE);
+		PublicKey publicSigningKey = IOUtils.readPublicKeyFromFile(Constants.ENROLMENT_CA_SIGNING_KEYS_PUBLIC_KEY_FILE);
+		this.enrolmentCaSigningKeys = new KeyPair(publicSigningKey, privateSigningKey);
 	}
 
 	public EtsiTs103097Certificate getCertificate() {

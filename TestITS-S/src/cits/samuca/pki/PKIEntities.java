@@ -23,7 +23,7 @@ public class PKIEntities {
 	private EnrolmentCA enrolmentCA;
 	private AuthorizationCA authorizationCA;
 	private TrustListManager trustListManager;
-	
+
 	private SendingITSS sendingItsStation;
 	private ReceivingITSS receivingItsStation;
 
@@ -31,15 +31,16 @@ public class PKIEntities {
 		createCertificationAuthorities();
 	}
 
-	private void createCertificationAuthorities() throws Exception {
+	private void createCertificationAuthorities() throws IllegalArgumentException, NoSuchAlgorithmException,
+			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
 		createRootCA();
 		createEnrolmentCA();
 		createAuthorizationCA();
-		createTlm();
+		createTrustListManager();
 		Logger.shortPrint("");
 	}
 
-	private void createRootCA() throws Exception {
+	private void createRootCA() {
 		this.rootCA = new RootCa();
 		Logger.shortPrint("");
 	}
@@ -63,12 +64,10 @@ public class PKIEntities {
 		this.authorizationCA.setEncryptionKeys(this.rootCA.getAuthorizationCaEncryptionKeys());
 		this.authorizationCA.setAuthorizationCaChain(this.rootCA.getAuthorizationCaChain());
 	}
-	
-	private void createTlm()
-			throws Exception
-	{
+
+	private void createTrustListManager(){
 		this.trustListManager = new TrustListManager();
-		
+
 		this.trustListManager.setRootCaCertificate(this.rootCA.getRootCaCertificate());
 	}
 
@@ -122,7 +121,7 @@ public class PKIEntities {
 		byte[] enrolmentMsgToSendToEnrolmentCa = this.sendingItsStation.requestEnrolmentMessage();
 		return enrolmentMsgToSendToEnrolmentCa;
 	}
-	
+
 	public byte[] getEnrolmentResponseFromEnrolmentCa(byte[] enrolmentMsgToSendToEnrolmentCa)
 			throws IOException, GeneralSecurityException, MessageParsingException, SignatureVerificationException,
 			DecryptionFailedException, InternalErrorException {

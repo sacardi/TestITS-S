@@ -12,16 +12,12 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.bouncycastle.util.encoders.Hex;
 import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
-import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
-import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManagerParams;
 import org.certificateservices.custom.c2x.etsits102941.v131.DecryptionFailedException;
 import org.certificateservices.custom.c2x.etsits102941.v131.InternalErrorException;
 import org.certificateservices.custom.c2x.etsits102941.v131.MessageParsingException;
@@ -38,23 +34,19 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BasePub
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BasePublicEncryptionKey.BasePublicEncryptionKeyChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Duration;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.GeographicRegion;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSsp;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PublicVerificationKey.PublicVerificationKeyChoices;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature.SignatureChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SubjectAssurance;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SymmAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time64;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ValidityPeriod;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.CertificateReciever;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Receiver;
 
-import cits.samuca.utils.Constants;
 import cits.samuca.utils.Logger;
+import cits.samuca.utils.PkiUtilsSingleton;
 
 /**
  * Simulates an authorization CA. They are defined in section 7.2.4, Subordinate
@@ -64,7 +56,6 @@ import cits.samuca.utils.Logger;
  *
  */
 public class AuthorizationCA {
-	public static final int port = 8888;
 
 	// these are the enrolled SITS
 	private static HashMap<String, EtsiTs103097Certificate> SendingItsStations = new HashMap<String, EtsiTs103097Certificate>();
@@ -77,18 +68,6 @@ public class AuthorizationCA {
 	private KeyPair encryptionKeys;
 
 	private EtsiTs103097Certificate[] authorizationCaChain;
-
-	private ETSITS102941MessagesCaGenerator messagesCaGenerator;
-
-	private DefaultCryptoManager cryptoManager;
-
-//	private EtsiTs103097Certificate rootCaCert;
-//
-//	private EtsiTs103097Certificate[] enrollmentCredCertChain;
-//
-//	private KeyPair enrolCAEncKeys;
-//
-//	private Certificate enrolmentCACert;
 
 	private PublicVerificationKeyChoices signAlg;
 
@@ -109,35 +88,9 @@ public class AuthorizationCA {
 
 	private void init() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
 			SignatureException, IOException, BadCredentialsException {
-		setupCryptoManager();
-
-		setCaMessagesGenerator();
 
 		this.signAlg = ecdsaNistP256;
 		this.encryptionAlgorithm = BasePublicEncryptionKey.BasePublicEncryptionKeyChoices.ecdsaNistP256;
-	}
-
-	private void setupCryptoManager() throws IllegalArgumentException, NoSuchAlgorithmException,
-			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
-		// Create a crypto manager in charge of communicating with underlying
-		// cryptographic components
-		this.cryptoManager = new DefaultCryptoManager();
-		// Initialize the crypto manager to use soft keys using the bouncy castle
-		// cryptographic provider.
-		this.cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
-	}
-
-	private void setCaMessagesGenerator() throws SignatureException {
-		int versionToGenerate = Ieee1609Dot2Data.DEFAULT_VERSION;
-		HashAlgorithm digestAlgorithm = HashAlgorithm.sha256;
-		SignatureChoices signatureScheme = Signature.SignatureChoices.ecdsaNistP256Signature;
-
-		// Create a ETSITS102941MessagesCaGenerator generator
-		messagesCaGenerator = new ETSITS102941MessagesCaGenerator(versionToGenerate, //
-				this.cryptoManager, //
-				digestAlgorithm, //
-				signatureScheme);
-
 	}
 
 	/**
@@ -159,14 +112,17 @@ public class AuthorizationCA {
 			DecryptionFailedException, InternalErrorException, GeneralSecurityException, ParseException {
 		EtsiTs103097DataEncryptedUnicast authorizationTicketRequest = new EtsiTs103097DataEncryptedUnicast(
 				authorizationMsgToSendToAuthorizationCA);
-		// Build a recipient store for Authorization Authority
-		Map<HashedId8, Receiver> authorizationCAReceipients = this.messagesCaGenerator.buildRecieverStore(
+
+		final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
+				.getMessagesCaGenerator();
+
+		Map<HashedId8, Receiver> authorizationCAReceipients = messagesCaGenerator.buildRecieverStore(
 				new Receiver[] { new CertificateReciever(this.encryptionKeys.getPrivate(), this.myCertificate) });
 
 		// To decrypt the message and verify the external POP signature (not the inner
 		// eCSignature signed for EA CA).
 		boolean expectPoP = true;
-		RequestVerifyResult<InnerAtRequest> verificationResult = this.messagesCaGenerator
+		RequestVerifyResult<InnerAtRequest> verificationResult = messagesCaGenerator
 				.decryptAndVerifyAuthorizationRequestMessage(//
 						authorizationTicketRequest, //
 						expectPoP, //
@@ -182,7 +138,7 @@ public class AuthorizationCA {
 
 		ValidityPeriod authorizationTicketValidityPeriod = setValidityPeriodForAuthorizationTicket();
 
-		GeographicRegion region = setRegionToItaly();
+		GeographicRegion region = PkiUtilsSingleton.getInstance().getGeographicRegion();
 
 		// This is the InnerEcRequest. The outer parts are Data-Signed and Encrypted.
 		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(
@@ -205,6 +161,9 @@ public class AuthorizationCA {
 		InnerAtResponse innerAtResponse = new InnerAtResponse(verificationResult.getRequestHash(),
 				AuthorizationResponseCode.ok, authorizationTicketCertificate);
 
+		final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
+				.getMessagesCaGenerator();
+
 		EtsiTs103097DataEncryptedUnicast authResponseMessage = messagesCaGenerator.genAuthorizationResponseMessage(
 				new Time64(new Date()), // generation Time
 				innerAtResponse, authorizationCaChain, // The AA certificate chain signing the message
@@ -217,7 +176,7 @@ public class AuthorizationCA {
 			ValidityPeriod authorizationTicketValidityPeriod, GeographicRegion region, PsidSsp[] appPermissions)
 			throws SignatureException, IOException {
 		ETSIAuthorizationTicketGenerator authorizationTicketGenerator = new ETSIAuthorizationTicketGenerator(
-				this.cryptoManager);
+				PkiUtilsSingleton.getInstance().getCryptoManager());
 
 		EtsiTs103097Certificate authorizationTicketCertificate = authorizationTicketGenerator.genAuthorizationTicket(//
 				authorizationTicketValidityPeriod, //
@@ -233,13 +192,6 @@ public class AuthorizationCA {
 				encryptionAlgorithm, //
 				authTicketEncKeysPublicKey);
 		return authorizationTicketCertificate;
-	}
-
-	private GeographicRegion setRegionToItaly() {
-		List<Integer> countries = new ArrayList<Integer>();
-		countries.add(Constants.REGION_ITALY);
-		GeographicRegion region = GeographicRegion.generateRegionForCountrys(countries);
-		return region;
 	}
 
 	private ValidityPeriod setValidityPeriodForAuthorizationTicket() throws ParseException {
@@ -288,26 +240,6 @@ public class AuthorizationCA {
 
 	public void setAuthorizationCaChain(EtsiTs103097Certificate[] authorizationCaChain) {
 		this.authorizationCaChain = authorizationCaChain;
-	}
-
-	public ETSITS102941MessagesCaGenerator getMessagesCaGenerator() {
-		return messagesCaGenerator;
-	}
-
-	public void setMessagesCaGenerator(ETSITS102941MessagesCaGenerator messagesCaGenerator) {
-		this.messagesCaGenerator = messagesCaGenerator;
-	}
-
-	public DefaultCryptoManager getCryptoManager() {
-		return cryptoManager;
-	}
-
-	public void setCryptoManager(DefaultCryptoManager cryptoManager) {
-		this.cryptoManager = cryptoManager;
-	}
-
-	public static int getPort() {
-		return port;
 	}
 
 	public static HashMap<String, EtsiTs103097Certificate> getSits() {

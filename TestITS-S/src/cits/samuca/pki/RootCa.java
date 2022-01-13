@@ -1,20 +1,11 @@
 package cits.samuca.pki;
 
 import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.bouncycastle.util.encoders.Hex;
-import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
-import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
-import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManagerParams;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.basetypes.Version;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.AaEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.CrlEntry;
@@ -22,33 +13,16 @@ import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlis
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.CtlEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.DcEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.EaEntry;
-import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.TlmEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.ToBeSignedCrl;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.ToBeSignedRcaCtl;
-import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.ToBeSignedTlmCtl;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.Url;
 import org.certificateservices.custom.c2x.etsits102941.v131.generator.ETSITS102941MessagesCaGenerator;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.secureddata.EtsiTs103097DataSigned;
-import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIAuthorityCertGenerator;
-import org.certificateservices.custom.c2x.ieee1609dot2.crypto.Ieee1609Dot2CryptoManager;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Duration.DurationChoices;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions.ServiceSpecificPermissionsChoices;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.GeographicRegion;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Hostname;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Psid;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSsp;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SequenceOfHashedId8;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature.SignatureChoices;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SubjectAssurance;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.CertificateId;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time32;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time64;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ValidityPeriod;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 
 import cits.samuca.utils.Logger;
 import cits.samuca.utils.PkiUtilsSingleton;
@@ -56,16 +30,10 @@ import cits.samuca.pki.certificates.AuthorizationCaCertificate;
 import cits.samuca.pki.certificates.EnrolmentCaCertificate;
 import cits.samuca.pki.certificates.RootCaCertificate;
 import cits.samuca.utils.Constants;
+import cits.samuca.utils.GenericCreationUtils;
 import cits.samuca.utils.IOUtils;
 
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature;
-
 public class RootCa {
-	public static final int port = 8886;
-
-	private Ieee1609Dot2CryptoManager cryptoManager;
-
-	private ETSITS102941MessagesCaGenerator messagesCaGenerator = null;
 
 	private RootCaCertificate rootCaCertificate;
 
@@ -73,18 +41,16 @@ public class RootCa {
 
 	private AuthorizationCaCertificate authorizationCaCertificate;
 
-	public RootCa() throws Exception {
+	public RootCa() {
 
 		createCertificatesAndKeyPairsForAllAuthorities();
 
-		generateCTL();
+		generateCertificateTrustList();
 
-		generateCRL();
+		generateCertificateRevocationList();
 	}
 
-	private void createCertificatesAndKeyPairsForAllAuthorities()
-			throws SignatureException, IOException, InvalidKeyException, IllegalArgumentException,
-			NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException, ClassNotFoundException {
+	private void createCertificatesAndKeyPairsForAllAuthorities() {
 
 		this.rootCaCertificate = new RootCaCertificate();
 
@@ -97,53 +63,39 @@ public class RootCa {
 				this.rootCaCertificate.getSigningKeys());
 	}
 
-	static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+	private void generateCertificateTrustList() {
 
-	private void generateCTL() throws Exception {
+		ToBeSignedRcaCtl toBeSignedCtl = generateInnerCertificateTrustList();
 
-		setupCryptoManager();
+		EtsiTs103097DataSigned certificateTrustList = signInnerCertificateTrustList(toBeSignedCtl);
 
-		ToBeSignedRcaCtl toBeSignedCtl = generateCtlRequest();
+		IOUtils.writeCtlToFile(certificateTrustList, Constants.CERTIFICATE_TRUST_LIST_FILE);
+		IOUtils.writeCtlToFile(certificateTrustList, Constants.CERTIFICATE_TRUST_LIST_FILE_FOR_COHDA);
 
-		setCaMessagesGenerator();
-		final Time64 signingGenerationTime = new Time64(new Date());
-
-		final EtsiTs103097Certificate[] signerCertificateChain = new EtsiTs103097Certificate[] {
-				this.rootCaCertificate.getCertificate() };
-
-		final PrivateKey signerPrivateKey = this.rootCaCertificate.getSigningKeys().getPrivate();
-
-		EtsiTs103097DataSigned certificateTrustListMessage = this.messagesCaGenerator.genRcaCertificateTrustListMessage(//
-				signingGenerationTime, //
-				toBeSignedCtl, //
-				signerCertificateChain, //
-				signerPrivateKey);
-
-		IOUtils.writeCtlToFile(certificateTrustListMessage, Constants.CERTIFICATE_TRUST_LIST_FILE);
-		IOUtils.writeCtlToFile(certificateTrustListMessage, Constants.CERTIFICATE_TRUST_LIST_FILE_FOR_COHDA);
 		Logger.shortPrint("[root CA         ] CTL written to file");
-
 	}
 
-	private ToBeSignedRcaCtl generateCtlRequest() throws Exception {
+	private ToBeSignedRcaCtl generateInnerCertificateTrustList() {
 		final Version version = Version.V1;
-		final Time32 nextUpdate = new Time32(dateFormat.parse("20250910 14:14:14"));
+		Time32 nextUpdate = GenericCreationUtils.createNextUpdateThisDateInTheFuture("20250910 14:14:14");
 		final boolean isFullCtl = true;
 		final int ctlSequence = 0;
 
-		final Url itsAccessPoint = new Url("http://localhost:8080/samuCA/itss/dummy");
-		final Url eaAccessPoint = new Url("http://localhost:8080/samuCA/enrolmentCA/");
-		final Url aaAccessPoint = new Url("http://localhost:8080/samuCA/authorizationCA");
-		final Url dcAccessPoint = new Url("http://localhost:8080/samuCA/dummy");
+		final Url itsAccessPoint = GenericCreationUtils.createUrl("http://localhost:8080/samuCA/itss/dummy");
+		final Url eaAccessPoint = GenericCreationUtils.createUrl("http://localhost:8080/samuCA/enrolmentCA/");
+		final Url aaAccessPoint = GenericCreationUtils.createUrl("http://localhost:8080/samuCA/authorizationCA");
+		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://localhost:8080/samuCA/dummy");
 
-		HashedId8[] certificateDigests = { new HashedId8(this.rootCaCertificate.getCertificate().getEncoded()) };
+		final byte[] rootCaEncodedCertificate = this.rootCaCertificate.getEncodedCertificate();
+		HashedId8[] digestsOfTrustedCertificates = { new HashedId8(rootCaEncodedCertificate) };
 
 		final CtlCommand[] ctlCommands = new CtlCommand[] { //
 				new CtlCommand(new CtlEntry(
 						new EaEntry(this.enrolmentCaCertificate.getCertificate(), eaAccessPoint, itsAccessPoint))), //
 				new CtlCommand(
 						new CtlEntry(new AaEntry(this.authorizationCaCertificate.getCertificate(), aaAccessPoint))), //
-				new CtlCommand(new CtlEntry(new DcEntry(dcAccessPoint, new SequenceOfHashedId8(certificateDigests)))), //
+				new CtlCommand(new CtlEntry(
+						new DcEntry(dcAccessPoint, new SequenceOfHashedId8(digestsOfTrustedCertificates)))), //
 		};
 
 		return new ToBeSignedRcaCtl( //
@@ -154,48 +106,67 @@ public class RootCa {
 				ctlCommands);
 	}
 
-	private void generateCRL() throws SignatureException, IOException, IllegalArgumentException,
-			NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException, ParseException {
+	private EtsiTs103097DataSigned signInnerCertificateTrustList(ToBeSignedRcaCtl toBeSignedCtl) {
 
-		setupCryptoManager();
-
-		ToBeSignedCrl toBeSignedCrl = generateCrlRequest();
-
-		setCaMessagesGenerator();
-
-		final Time64 signingGenerationTime = new Time64(new Date());
+		final Date now = new Date();
+		final Time64 signingGenerationTime = new Time64(now);
 
 		final EtsiTs103097Certificate[] signerCertificateChain = new EtsiTs103097Certificate[] {
 				this.rootCaCertificate.getCertificate() };
 
 		final PrivateKey signerPrivateKey = this.rootCaCertificate.getSigningKeys().getPrivate();
 
-		EtsiTs103097DataSigned certificateRevocationListMessage = this.messagesCaGenerator
-				.genCertificateRevocationListMessage(//
-						signingGenerationTime, //
-						toBeSignedCrl, //
-						signerCertificateChain, //
-						signerPrivateKey);
+		EtsiTs103097DataSigned certificateTrustList = signInnerCtl_exitOnProblems(//
+				toBeSignedCtl, //
+				signingGenerationTime, //
+				signerCertificateChain, //
+				signerPrivateKey);
 
-//        // To verify CTL and CRL messages
-//        Map<HashedId8, Certificate> crlTrustStore = new HashMap<>(); // Only root ca needed from truststore in this case.
-//        VerifyResult<ToBeSignedCrl> crlVerifyResult = messagesCaGenerator.verifyCertificateRevocationListMessage(
-//                certificateRevocationListMessage,
-//                crlTrustStore,
-//                trustStore
-//        );
+		return certificateTrustList;
+	}
 
-		IOUtils.writeCrlToFile(certificateRevocationListMessage, Constants.CERTIFICATE_REVOCATION_LIST_FILE);
-		IOUtils.writeCrlToFile(certificateRevocationListMessage, Constants.CERTIFICATE_REVOCATION_LIST_FILE_FOR_COHDA);
+	private EtsiTs103097DataSigned signInnerCtl_exitOnProblems(ToBeSignedRcaCtl toBeSignedCtl,
+			final Time64 signingGenerationTime, final EtsiTs103097Certificate[] signerCertificateChain,
+			final PrivateKey signerPrivateKey) {
+
+		EtsiTs103097DataSigned certificateTrustList = null;
+
+		try {
+			final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
+					.getMessagesCaGenerator();
+
+			certificateTrustList = messagesCaGenerator.genRcaCertificateTrustListMessage(//
+					signingGenerationTime, //
+					toBeSignedCtl, //
+					signerCertificateChain, //
+					signerPrivateKey);
+
+		} catch (SignatureException | IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		return certificateTrustList;
+	}
+
+	private void generateCertificateRevocationList() {
+
+		ToBeSignedCrl toBeSignedCrl = generateInnerCertificateRevocationList();
+
+		EtsiTs103097DataSigned certificateRevocationList = signInnerCertificateRevocationList(toBeSignedCrl);
+
+		IOUtils.writeCrlToFile(certificateRevocationList, Constants.CERTIFICATE_REVOCATION_LIST_FILE);
+		IOUtils.writeCrlToFile(certificateRevocationList, Constants.CERTIFICATE_REVOCATION_LIST_FILE_FOR_COHDA);
+
 		Logger.shortPrint("[root CA         ] CRL written to file");
 	}
 
-	private ToBeSignedCrl generateCrlRequest() throws ParseException {
+	private ToBeSignedCrl generateInnerCertificateRevocationList() {
 		final Version version = Version.V1;
 
 		Time32 thisUpdate = new Time32(new Date());
 
-		final Time32 nextUpdate = new Time32(dateFormat.parse("20250910 14:14:14"));
+		final Time32 nextUpdate = GenericCreationUtils.createNextUpdateThisDateInTheFuture("20250910 14:14:14");
 
 		final CrlEntry[] emptyCrl = new CrlEntry[] {};
 
@@ -205,30 +176,45 @@ public class RootCa {
 				emptyCrl);
 	}
 
-	private void setupCryptoManager() throws IllegalArgumentException, NoSuchAlgorithmException,
-			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
+	private EtsiTs103097DataSigned signInnerCertificateRevocationList(ToBeSignedCrl toBeSignedCrl) {
+		final Date now = new Date();
+		final Time64 signingGenerationTime = new Time64(now);
 
-		if (this.cryptoManager != null) {
-			return;
-		}
+		final EtsiTs103097Certificate[] signerCertificateChain = new EtsiTs103097Certificate[] {
+				this.rootCaCertificate.getCertificate() };
 
-		this.cryptoManager = new DefaultCryptoManager();
-		this.cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
+		final PrivateKey signerPrivateKey = this.rootCaCertificate.getSigningKeys().getPrivate();
+
+		EtsiTs103097DataSigned certificateRevocationList = signInnerCrl_exitOnProblems(//
+				toBeSignedCrl, //
+				signingGenerationTime, //
+				signerCertificateChain, //
+				signerPrivateKey);
+
+		return certificateRevocationList;
 	}
 
-	private void setCaMessagesGenerator() throws SignatureException {
-		if (this.messagesCaGenerator != null) {
-			return;
-		}
-		int versionToGenerate = Ieee1609Dot2Data.DEFAULT_VERSION;
-		HashAlgorithm digestAlgorithm = HashAlgorithm.sha256;
-		SignatureChoices signatureScheme = Signature.SignatureChoices.ecdsaNistP256Signature;
+	private EtsiTs103097DataSigned signInnerCrl_exitOnProblems(ToBeSignedCrl toBeSignedCrl,
+			final Time64 signingGenerationTime, final EtsiTs103097Certificate[] signerCertificateChain,
+			final PrivateKey signerPrivateKey) {
 
-		this.messagesCaGenerator = new ETSITS102941MessagesCaGenerator( //
-				versionToGenerate, //
-				this.cryptoManager, //
-				digestAlgorithm, //
-				signatureScheme);
+		EtsiTs103097DataSigned signedCrl = null;
+
+		try {
+			final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
+					.getMessagesCaGenerator();
+
+			signedCrl = messagesCaGenerator.genCertificateRevocationListMessage(//
+					signingGenerationTime, //
+					toBeSignedCrl, //
+					signerCertificateChain, //
+					signerPrivateKey);
+
+		} catch (SignatureException | IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return signedCrl;
 	}
 
 	public EtsiTs103097Certificate getRootCaCertificate() {

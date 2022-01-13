@@ -16,50 +16,79 @@ import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.securedd
 
 public class IOUtils {
 
-	public static void writeCtlToFile(EtsiTs103097DataSigned certificateTrustListMessage, String filename)
-			throws IOException {
+	public static void writeCtlToFile(EtsiTs103097DataSigned certificateTrustListMessage, String filename) {
 
 		Logger.shortPrint("[I/O utils       ] writing CTL to " + filename);
 
-		writeEtsiTs103097DataSignedToFile(certificateTrustListMessage, filename);
+		writeEtsiTs103097DataSignedToFile_exitOnProblems(certificateTrustListMessage, filename);
 	}
 
-	public static void writeCrlToFile(EtsiTs103097DataSigned certificateRevocationListMessage, String filename)
-			throws IOException {
+	public static void writeCrlToFile(EtsiTs103097DataSigned certificateRevocationListMessage, String filename) {
 
 		Logger.shortPrint("[I/O utils       ] writing CRL to " + filename);
 
-		writeEtsiTs103097DataSignedToFile(certificateRevocationListMessage, filename);
+		writeEtsiTs103097DataSignedToFile_exitOnProblems(certificateRevocationListMessage, filename);
+	}
+	
+	private static void writeEtsiTs103097DataSignedToFile_exitOnProblems(
+			EtsiTs103097DataSigned certificateTrustListMessage, String filename) {
+		
+		try {
+			writeEtsiTs103097DataSignedToFile(certificateTrustListMessage, filename);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 
-	private static void writeEtsiTs103097DataSignedToFile(EtsiTs103097DataSigned fileToDump, String filename)
-			throws IOException {
+	private static void writeEtsiTs103097DataSignedToFile(EtsiTs103097DataSigned fileToDump, String filename) throws IOException {
 
 		DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(filename));
+
 		fileToDump.encode(dataOutputStream);
+
 		dataOutputStream.close();
+
 	}
 
-	public static void writeCertificateToFile(EtsiTs103097Certificate certificate, String filename)
-			throws FileNotFoundException, IOException {
+	public static void writeCertificateToFile(EtsiTs103097Certificate certificate, String filename) {
 
 		Logger.shortPrint("[I/O utils       ] writing certificate to " + filename);
 
-		DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(filename));
-		certificate.encode(dataOutputStream);
-		dataOutputStream.close();
+		DataOutputStream dataOutputStream;
+		try {
+			dataOutputStream = new DataOutputStream(new FileOutputStream(filename));
+
+			certificate.encode(dataOutputStream);
+
+			dataOutputStream.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 
-	public static EtsiTs103097Certificate readCertificateFromFile(String filename)
-			throws FileNotFoundException, IOException {
+	public static EtsiTs103097Certificate readCertificateFromFile(String filename) {
+
+		EtsiTs103097Certificate certificate = null;
 
 		Logger.shortPrint("[I/O utils       ] reading certificate from " + filename);
 
-		DataInputStream dataInputStream = new DataInputStream(new FileInputStream(filename));
+		try {
+			DataInputStream dataInputStream = new DataInputStream(new FileInputStream(filename));
 
-		EtsiTs103097Certificate certificate = new EtsiTs103097Certificate();
-		certificate.decode(dataInputStream);
-		dataInputStream.close();
+			certificate = new EtsiTs103097Certificate();
+
+			certificate.decode(dataInputStream);
+
+			dataInputStream.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
 		return certificate;
 	}
@@ -99,8 +128,11 @@ public class IOUtils {
 
 	private static void writeObjectToFile(Object object, String filename) throws FileNotFoundException, IOException {
 		FileOutputStream fileOutputStream = new FileOutputStream(filename);
+		
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+		
 		objectOutputStream.writeObject(object);
+		
 		objectOutputStream.close();
 	}
 

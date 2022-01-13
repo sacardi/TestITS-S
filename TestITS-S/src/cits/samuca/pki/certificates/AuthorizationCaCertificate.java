@@ -40,9 +40,7 @@ public class AuthorizationCaCertificate {
 	private EtsiTs103097Certificate rootCaCertificate;
 	private KeyPair rootCaSigningKeys;
 
-	public AuthorizationCaCertificate(EtsiTs103097Certificate rootCaCertificate, KeyPair rootCaSigningKeys)
-			throws InvalidKeyException, IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
-			SignatureException, IOException, BadCredentialsException, ClassNotFoundException {
+	public AuthorizationCaCertificate(EtsiTs103097Certificate rootCaCertificate, KeyPair rootCaSigningKeys) {
 
 		this.rootCaCertificate = rootCaCertificate;
 		this.rootCaSigningKeys = rootCaSigningKeys;
@@ -50,9 +48,7 @@ public class AuthorizationCaCertificate {
 		readOrCreateCertificateAndKeyPairs();
 	}
 
-	private void readOrCreateCertificateAndKeyPairs()
-			throws SignatureException, IOException, InvalidKeyException, ClassNotFoundException,
-			IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void readOrCreateCertificateAndKeyPairs() {
 		if (Constants.READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM) {
 			readAuthorizationCaCertificateAndKeyPairs();
 		} else {
@@ -60,12 +56,10 @@ public class AuthorizationCaCertificate {
 		}
 	}
 
-	private void createAuthorizationCaCertificateAndKeyPairs()
-			throws IllegalArgumentException, SignatureException, IOException, InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void createAuthorizationCaCertificateAndKeyPairs() {
 
 		DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
-		
+
 		this.authorizationCaSigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
 		IOUtils.writePrivateKeyToFile(this.authorizationCaSigningKeys.getPrivate(),
 				Constants.AUTHORIZATION_CA_SIGNING_KEYS_PRIVATE_KEY_FILE);
@@ -92,12 +86,11 @@ public class AuthorizationCaCertificate {
 		PublicKey encryptionPublicKey = this.authorizationCaEncryptionKeys.getPublic();
 
 		ETSIAuthorityCertGenerator authorityCertGenerator = PkiUtilsSingleton.getInstance().getAuthorityCertGenerator();
-		
+
 		GeographicRegion geographicRegion = PkiUtilsSingleton.getInstance().getGeographicRegion();
-		
-		this.authorizationCaCertificate = authorityCertGenerator.genAuthorizationCA(aAName, //
+
+		createAuthorizationCaCertificate(aAName, //
 				authorityCAValidityPeriod, //
-				geographicRegion, //
 				subjectAssurance, //
 				signingPublicKeyAlgorithm, //
 				verificationPublicKey, //
@@ -106,8 +99,10 @@ public class AuthorizationCaCertificate {
 				signerCertificatePrivateKey, //
 				symmetricEncryptionAlgorithm, //
 				publicKeyEncryptionAlgorithm, //
-				encryptionPublicKey //
-		);
+				encryptionPublicKey, //
+				authorityCertGenerator, //
+				geographicRegion);
+
 		this.authorizationCAChain = new EtsiTs103097Certificate[] { this.authorizationCaCertificate,
 				this.rootCaCertificate };
 
@@ -115,21 +110,64 @@ public class AuthorizationCaCertificate {
 		Logger.shortPrint("[root CA         ] Authorization CA certificate written to file");
 	}
 
-	private void readAuthorizationCaCertificateAndKeyPairs() throws IllegalArgumentException, SignatureException,
-			IOException, InvalidKeyException, ClassNotFoundException {
+	private void createAuthorizationCaCertificate(String aAName, ValidityPeriod authorityCAValidityPeriod,
+			SubjectAssurance subjectAssurance, SignatureChoices signingPublicKeyAlgorithm,
+			PublicKey verificationPublicKey, EtsiTs103097Certificate signerCertificate,
+			PublicKey signerCertificatePublicKey, PrivateKey signerCertificatePrivateKey,
+			SymmAlgorithm symmetricEncryptionAlgorithm, BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm,
+			PublicKey encryptionPublicKey, ETSIAuthorityCertGenerator authorityCertGenerator,
+			GeographicRegion geographicRegion) {
+		try {
+			this.authorizationCaCertificate = authorityCertGenerator.genAuthorizationCA(aAName, //
+					authorityCAValidityPeriod, //
+					geographicRegion, //
+					subjectAssurance, //
+					signingPublicKeyAlgorithm, //
+					verificationPublicKey, //
+					signerCertificate, //
+					signerCertificatePublicKey, //
+					signerCertificatePrivateKey, //
+					symmetricEncryptionAlgorithm, //
+					publicKeyEncryptionAlgorithm, //
+					encryptionPublicKey //
+			);
+		} catch (IllegalArgumentException | SignatureException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
-		PrivateKey privateSigningKey = IOUtils
-				.readPrivateKeyFromFile(Constants.AUTHORIZATION_CA_SIGNING_KEYS_PRIVATE_KEY_FILE);
-		PublicKey publicSigningKey = IOUtils
-				.readPublicKeyFromFile(Constants.AUTHORIZATION_CA_SIGNING_KEYS_PUBLIC_KEY_FILE);
-		this.authorizationCaSigningKeys = new KeyPair(publicSigningKey, privateSigningKey);
+	private void readAuthorizationCaCertificateAndKeyPairs() {
 
+		readAuthorizationCaKeyPairs();
+
+		readAuthorizationCaCertificate();
+	}
+
+	private void readAuthorizationCaKeyPairs() {
+
+		readAuthorizationCaSigningKeys();
+
+		readAuthorizationCaEncryptionKeys();
+	}
+
+	private void readAuthorizationCaEncryptionKeys() {
 		PrivateKey privateEncryptionKey = IOUtils
 				.readPrivateKeyFromFile(Constants.AUTHORIZATION_CA_ENCRYPTION_KEYS_PRIVATE_KEY_FILE);
 		PublicKey publicEncryptionKey = IOUtils
 				.readPublicKeyFromFile(Constants.AUTHORIZATION_CA_ENCRYPTION_KEYS_PUBLIC_KEY_FILE);
 		this.authorizationCaEncryptionKeys = new KeyPair(publicEncryptionKey, privateEncryptionKey);
+	}
 
+	private void readAuthorizationCaSigningKeys() {
+		PrivateKey privateSigningKey = IOUtils
+				.readPrivateKeyFromFile(Constants.AUTHORIZATION_CA_SIGNING_KEYS_PRIVATE_KEY_FILE);
+		PublicKey publicSigningKey = IOUtils
+				.readPublicKeyFromFile(Constants.AUTHORIZATION_CA_SIGNING_KEYS_PUBLIC_KEY_FILE);
+		this.authorizationCaSigningKeys = new KeyPair(publicSigningKey, privateSigningKey);
+	}
+
+	private void readAuthorizationCaCertificate() {
 		this.authorizationCaCertificate = IOUtils.readCertificateFromFile(Constants.AUTHORIZATION_CA_CERTIFICATE_FILE);
 		this.authorizationCAChain = new EtsiTs103097Certificate[] { this.authorizationCaCertificate,
 				this.rootCaCertificate };

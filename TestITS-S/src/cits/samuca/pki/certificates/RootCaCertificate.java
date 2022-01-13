@@ -1,18 +1,14 @@
 package cits.samuca.pki.certificates;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.InvalidKeyException;
+import java.io.UnsupportedEncodingException;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Date;
 
 import org.bouncycastle.util.encoders.Hex;
-import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
 import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIAuthorityCertGenerator;
@@ -52,16 +48,13 @@ public class RootCaCertificate {
 
 	private KeyPair rootCaEncryptionKeys;
 
-	public RootCaCertificate() throws SignatureException, FileNotFoundException, IOException, InvalidKeyException,
-			IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException,
-			ClassNotFoundException {
+	public RootCaCertificate() {
 
 		readOrCreateCertificateAndKeyPairs();
 	}
 
-	private void readOrCreateCertificateAndKeyPairs()
-			throws SignatureException, IOException, InvalidKeyException, ClassNotFoundException,
-			IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void readOrCreateCertificateAndKeyPairs() {
+		
 		if (Constants.READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM) {
 			readRootCaCertificateAndKeyPairs();
 		} else {
@@ -69,16 +62,14 @@ public class RootCaCertificate {
 		}
 	}
 
-	private void createRootCaCertificateAndKeyPairs() throws IllegalArgumentException, SignatureException, IOException,
-			InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void createRootCaCertificateAndKeyPairs() {
 
 		createRootCaKeyPairs();
 
 		createRootCaCertificate();
 	}
 
-	private void createRootCaCertificate() throws SignatureException, IOException, FileNotFoundException,
-			IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void createRootCaCertificate() {
 		String rootCaName = "samuCA.autostrade.it";
 
 		final int assuranceLevel = 3;
@@ -124,7 +115,10 @@ public class RootCaCertificate {
 //		final int confidenceLevel = 2;
 //		final SubjectAssurance subjectAssurance = new SubjectAssurance(assuranceLevel, confidenceLevel);
 		final SubjectAssurance subjectAssurance = null;
-		final CertificateId certificateId = new CertificateId(new Hostname(rootCaName));
+
+		Hostname rootCaHostname = createHostNameFromString(rootCaName);
+
+		final CertificateId certificateId = new CertificateId(rootCaHostname);
 
 		final boolean appBoolean1 = true;
 		final boolean enrollBoolean1 = true;
@@ -132,11 +126,7 @@ public class RootCaCertificate {
 		final boolean appBoolean2 = false;
 		final boolean enrollBoolean2 = true;
 
-		final PsidSsp[] appPermissions = new PsidSsp[] {
-				new PsidSsp(new Psid(622),
-						new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("01"))),
-				new PsidSsp(new Psid(624), new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp,
-						Hex.decode("0138"))) };
+		final PsidSsp[] appPermissions = createAppPermissions();
 
 		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
 				new SubjectPermissions(SubjectPermissionsChoices.explicit,
@@ -181,40 +171,97 @@ public class RootCaCertificate {
 
 		final PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] { //
 				firstPsidGroupPermissions, //
-//				secondPsidGroupPermissions, //
-//				thirdPsidGroupPermissions, //
-//				fourthPsidGroupPermissions, //
-//				fifthPsidGroupPermissions, //
-//				sixthPsidGroupPermissions //
+				secondPsidGroupPermissions, //
+				thirdPsidGroupPermissions, //
+				fourthPsidGroupPermissions, //
+				fifthPsidGroupPermissions, //
+				sixthPsidGroupPermissions //
 		};
 
-		this.rootCaCertificate = authorityCertGenerator.genRootCA(//
-				certificateId, //
+		createRootCaCertificate(//
 				rootCaValidityPeriod, //
-				geographicRegion, //
-				subjectAssurance, //
-				appPermissions, //
-				certIssuePermissions, //
 				signingPublicKeyAlgorithm, //
 				signingPublicKey, //
 				signingPrivateKey, //
 				symmetricEncryptionAlgorithm, //
 				publicKeyEncryptionAlgorithm, //
-				encryptionPublicKey);
+				encryptionPublicKey, //
+				authorityCertGenerator, //
+				geographicRegion, //
+				subjectAssurance, //
+				certificateId, //
+				appPermissions, //
+				certIssuePermissions);
 
 		IOUtils.writeCertificateToFile(this.rootCaCertificate, Constants.ROOT_CA_CERTIFICATE_FILE);
 		Logger.shortPrint("[root CA         ] Root CA certificate written to file");
 	}
 
-	private void createRootCaKeyPairs() throws IOException, InvalidKeyException, IllegalArgumentException,
-			NoSuchAlgorithmException, NoSuchProviderException, SignatureException, BadCredentialsException {
+	private void createRootCaCertificate(ValidityPeriod rootCaValidityPeriod,
+			SignatureChoices signingPublicKeyAlgorithm, PublicKey signingPublicKey, PrivateKey signingPrivateKey,
+			SymmAlgorithm symmetricEncryptionAlgorithm, BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm,
+			PublicKey encryptionPublicKey, ETSIAuthorityCertGenerator authorityCertGenerator,
+			GeographicRegion geographicRegion, final SubjectAssurance subjectAssurance,
+			final CertificateId certificateId, final PsidSsp[] appPermissions,
+			final PsidGroupPermissions[] certIssuePermissions) {
+		try {
+			this.rootCaCertificate = authorityCertGenerator.genRootCA(//
+					certificateId, //
+					rootCaValidityPeriod, //
+					geographicRegion, //
+					subjectAssurance, //
+					appPermissions, //
+					certIssuePermissions, //
+					signingPublicKeyAlgorithm, //
+					signingPublicKey, //
+					signingPrivateKey, //
+					symmetricEncryptionAlgorithm, //
+					publicKeyEncryptionAlgorithm, //
+					encryptionPublicKey);
+		} catch (IllegalArgumentException | SignatureException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private PsidSsp[] createAppPermissions() {
+		PsidSsp[] appPermissions = null;
+
+		try {
+			appPermissions = new PsidSsp[] {
+					new PsidSsp(new Psid(622),
+							new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp,
+									Hex.decode("01"))),
+					new PsidSsp(new Psid(624), new ServiceSpecificPermissions(
+							ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("0138"))) };
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return appPermissions;
+	}
+
+	private Hostname createHostNameFromString(String rootCaName) {
+		Hostname rootCaHostname = null;
+
+		try {
+			rootCaHostname = new Hostname(rootCaName);
+
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return rootCaHostname;
+	}
+
+	private void createRootCaKeyPairs() {
 		createRootCaSigningKeys();
 
 		createRootCaEncryptionKeys();
 	}
 
-	private void createRootCaSigningKeys() throws IOException, InvalidKeyException, IllegalArgumentException,
-			NoSuchAlgorithmException, NoSuchProviderException, SignatureException, BadCredentialsException {
+	private void createRootCaSigningKeys() {
 		DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
 
 		this.rootCaSigningKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
@@ -226,8 +273,7 @@ public class RootCaCertificate {
 				Constants.ROOT_CA_SIGNING_KEYS_PUBLIC_KEY_FILE);
 	}
 
-	private void createRootCaEncryptionKeys() throws IOException, InvalidKeyException, IllegalArgumentException,
-			NoSuchAlgorithmException, NoSuchProviderException, SignatureException, BadCredentialsException {
+	private void createRootCaEncryptionKeys() {
 		DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
 
 		this.rootCaEncryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
@@ -239,37 +285,40 @@ public class RootCaCertificate {
 				Constants.ROOT_CA_ENCRYPTION_KEYS_PUBLIC_KEY_FILE);
 	}
 
-	private void readRootCaCertificateAndKeyPairs() throws IllegalArgumentException, SignatureException, IOException,
-			InvalidKeyException, ClassNotFoundException {
+	private void readRootCaCertificateAndKeyPairs() {
 
 		readRootCaKeyPairs();
 
 		readRootCaCertificate();
 	}
 
-	private void readRootCaCertificate() throws FileNotFoundException, IOException {
+	private void readRootCaCertificate() {
 		this.rootCaCertificate = IOUtils.readCertificateFromFile(Constants.ROOT_CA_CERTIFICATE_FILE);
 
 		Logger.shortPrint("[root CA         ] Root CA certificate read from file");
 	}
 
-	private void readRootCaKeyPairs() throws IOException, ClassNotFoundException {
+	private void readRootCaKeyPairs() {
 		readRootCaSigningKeys();
 
 		readRootCaEncryptionKeys();
 	}
 
-	private void readRootCaEncryptionKeys() throws IOException, ClassNotFoundException {
+	private void readRootCaEncryptionKeys() {
 		PrivateKey privateEncryptionKey = IOUtils
 				.readPrivateKeyFromFile(Constants.ROOT_CA_ENCRYPTION_KEYS_PRIVATE_KEY_FILE);
+
 		PublicKey publicEncryptionKey = IOUtils
 				.readPublicKeyFromFile(Constants.ROOT_CA_ENCRYPTION_KEYS_PUBLIC_KEY_FILE);
+
 		this.rootCaEncryptionKeys = new KeyPair(publicEncryptionKey, privateEncryptionKey);
 	}
 
-	private void readRootCaSigningKeys() throws IOException, ClassNotFoundException {
+	private void readRootCaSigningKeys() {
 		PrivateKey privateSigningKey = IOUtils.readPrivateKeyFromFile(Constants.ROOT_CA_SIGNING_KEYS_PRIVATE_KEY_FILE);
+
 		PublicKey publicSigningKey = IOUtils.readPublicKeyFromFile(Constants.ROOT_CA_SIGNING_KEYS_PUBLIC_KEY_FILE);
+
 		this.rootCaSigningKeys = new KeyPair(publicSigningKey, privateSigningKey);
 	}
 
@@ -283,6 +332,19 @@ public class RootCaCertificate {
 
 	public KeyPair getEncryptionKeys() {
 		return this.rootCaEncryptionKeys;
+	}
+
+	public byte[] getEncodedCertificate() {
+		byte[] encodedCertificate = null;
+
+		try {
+			encodedCertificate = this.rootCaCertificate.getEncoded();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		return encodedCertificate;
 	}
 
 }

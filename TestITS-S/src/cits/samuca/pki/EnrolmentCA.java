@@ -20,7 +20,6 @@ import javax.crypto.SecretKey;
 import org.bouncycastle.util.encoders.Hex;
 import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
 import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
-import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManagerParams;
 import org.certificateservices.custom.c2x.etsits102941.v131.DecryptionFailedException;
 import org.certificateservices.custom.c2x.etsits102941.v131.InternalErrorException;
 import org.certificateservices.custom.c2x.etsits102941.v131.MessageParsingException;
@@ -36,19 +35,17 @@ import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIEnroll
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BasePublicEncryptionKey.BasePublicEncryptionKeyChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Duration.DurationChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.GeographicRegion;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature.SignatureChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SymmAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time64;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ValidityPeriod;
-import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.CertificateReciever;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.receiver.Receiver;
 
 import cits.samuca.utils.Constants;
 import cits.samuca.utils.Logger;
+import cits.samuca.utils.PkiUtilsSingleton;
 
 /**
  * They are defined in section 7.2.4, Subordinate certification authority
@@ -61,9 +58,7 @@ import cits.samuca.utils.Logger;
  * @author max
  *
  */
-public class EnrolmentCA implements Runnable {
-	public static final int port = 8887;
-
+public class EnrolmentCA {
 	// This is the hashmap of the sending its. The Enrolment CA already knows the
 	// ITS, and it shall know the permissions,
 	// and the validity period and region.
@@ -80,47 +75,8 @@ public class EnrolmentCA implements Runnable {
 
 	private EtsiTs103097Certificate[] enrolmentCaChain;
 
-	private ETSITS102941MessagesCaGenerator messagesCaGenerator;
-
-	private DefaultCryptoManager cryptoManager;
-
 	public EnrolmentCA() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
 			SignatureException, IOException, BadCredentialsException {
-		init();
-	}
-
-	private void init() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
-			SignatureException, IOException, BadCredentialsException {
-		setupCryptoManager();
-
-		setCaMessagesGenerator();
-	}
-
-	@Override
-	public void run() {
-		// not used
-	}
-
-	private void setupCryptoManager() throws IllegalArgumentException, NoSuchAlgorithmException,
-			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
-		// Create a crypto manager in charge of communicating with underlying
-		// cryptographic components
-		this.cryptoManager = new DefaultCryptoManager();
-		// Initialize the crypto manager to use soft keys using the bouncy castle
-		// cryptographic provider.
-		this.cryptoManager.setupAndConnect(new DefaultCryptoManagerParams("BC"));
-	}
-
-	private void setCaMessagesGenerator() throws SignatureException {
-		int versionToGenerate = Ieee1609Dot2Data.DEFAULT_VERSION;
-		HashAlgorithm digestAlgorithm = HashAlgorithm.sha256;
-		SignatureChoices signatureScheme = Signature.SignatureChoices.ecdsaNistP256Signature;
-
-		this.messagesCaGenerator = new ETSITS102941MessagesCaGenerator(//
-				versionToGenerate, //
-				this.cryptoManager, //
-				digestAlgorithm, //
-				signatureScheme);
 	}
 
 	public EtsiTs103097Certificate getCertificate() {
@@ -200,14 +156,18 @@ public class EnrolmentCA implements Runnable {
 			EtsiTs103097DataEncryptedUnicast encryptedMessage) throws IOException, GeneralSecurityException,
 			MessageParsingException, SignatureVerificationException, DecryptionFailedException, InternalErrorException {
 		// Then create a receiver store to decrypt the message
-		Map<HashedId8, Receiver> enrolCaReceipients = this.messagesCaGenerator.buildRecieverStore(
+		final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
+				.getMessagesCaGenerator();
+
+		Map<HashedId8, Receiver> enrolCaReceipients = messagesCaGenerator.buildRecieverStore(
 				new Receiver[] { new CertificateReciever(this.encryptionKeys.getPrivate(), this.myCertificate) });
 
 		// Now try to decrypt:
-		RequestVerifyResult<InnerEcRequest> innerEcRequest = this.messagesCaGenerator
+		RequestVerifyResult<InnerEcRequest> innerEcRequest = messagesCaGenerator
 				.decryptAndVerifyEnrolmentRequestMessage(encryptedMessage, null, null, enrolCaReceipients);
 
-		Logger.shortPrint("[enrolment CA    ] 1) Received a enrolment request message from: " + innerEcRequest.getSignerIdentifier());
+		Logger.shortPrint("[enrolment CA    ] 1) Received a enrolment request message from: "
+				+ innerEcRequest.getSignerIdentifier());
 		Logger.debugPrint("[enrolment CA    ] 1) Header info" + innerEcRequest.getHeaderInfo());
 		Logger.debugPrint("[enrolment CA    ] 1) The inner message " + innerEcRequest.getValue());
 		return innerEcRequest;
@@ -216,12 +176,13 @@ public class EnrolmentCA implements Runnable {
 	private EtsiTs103097DataEncryptedUnicast createEnrolmentResponse(
 			RequestVerifyResult<InnerEcRequest> enrolmentRequestResult)
 			throws SignatureException, IOException, GeneralSecurityException {
-		byte[] itssId = getItssId(enrolmentRequestResult);
+//		byte[] itssId = getItssId(enrolmentRequestResult);
 
 		InnerEcResponse innerEcResponse = null;
 
 		// XXX: UNCOMMENT / CHANGE -- begin
-		// here I should check that the itsID is one of the S-ITSS that I've already visited
+		// here I should check that the itsID is one of the S-ITSS that I've already
+		// visited
 //		boolean sendingItssIsKnown = SendingItsStations.containsKey(new String(itssId));
 		boolean sendingItssIsKnown = true;
 		// XXX: UNCOMMENT / CHANGE -- end
@@ -237,23 +198,25 @@ public class EnrolmentCA implements Runnable {
 		return encryptedEnrolmentResponse;
 	}
 
-	private byte[] getItssId(RequestVerifyResult<InnerEcRequest> enrolmentRequestResult) {
-		InnerEcRequest msgRequest = enrolmentRequestResult.getValue();
-		byte[] itsId = msgRequest.getItsId();
-
-		Logger.shortPrint("[enrolment CA    ] 1) The ITS id received is " + new String(itsId));
-		// let me get the information for this ITS ID
-		return itsId;
-	}
+//	private byte[] getItssId(RequestVerifyResult<InnerEcRequest> enrolmentRequestResult) {
+//		InnerEcRequest msgRequest = enrolmentRequestResult.getValue();
+//		byte[] itsId = msgRequest.getItsId();
+//
+//		Logger.shortPrint("[enrolment CA    ] 1) The ITS id received is " + new String(itsId));
+//		// let me get the information for this ITS ID
+//		return itsId;
+//	}
 
 	private EtsiTs103097Certificate createEnrolmentCredentialForItss() throws SignatureException, IOException {
 		Logger.shortPrint("[enrolment CA    ] 1) The S-ITS-S is known, generating its certificate");
 
+		final DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
+
 		ETSIEnrollmentCredentialGenerator enrollmentCredentialCertGenerator = new ETSIEnrollmentCredentialGenerator(
 				cryptoManager);
 		SignatureChoices signingAlgorithm = SignatureChoices.ecdsaNistP256Signature;
-		KeyPair enrollmentCredentialSigningKeys = this.cryptoManager.generateKeyPair(signingAlgorithm);
-		KeyPair enrollmentCredentialEncryptionKeys = this.cryptoManager.generateKeyPair(signingAlgorithm);
+		KeyPair enrollmentCredentialSigningKeys = cryptoManager.generateKeyPair(signingAlgorithm);
+		KeyPair enrollmentCredentialEncryptionKeys = cryptoManager.generateKeyPair(signingAlgorithm);
 
 		ValidityPeriod validityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 35);
 
@@ -325,6 +288,10 @@ public class EnrolmentCA implements Runnable {
 		PrivateKey signerPrivateKey = this.signingKeys.getPrivate();
 		SymmAlgorithm encryptionAlgorithm = SymmAlgorithm.aes128Ccm;
 		SecretKey preSharedKey = enrolmentRequestResult.getSecretKey();
+
+		final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
+				.getMessagesCaGenerator();
+
 		EtsiTs103097DataEncryptedUnicast enrolmentResponseMessage = messagesCaGenerator.genEnrolmentResponseMessage(
 				generationTime, //
 				innerEcResponse, //
