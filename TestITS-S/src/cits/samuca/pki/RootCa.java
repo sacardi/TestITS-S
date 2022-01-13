@@ -11,6 +11,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.bouncycastle.util.encoders.Hex;
 import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
 import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
 import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManagerParams;
@@ -21,25 +22,40 @@ import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlis
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.CtlEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.DcEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.EaEntry;
+import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.TlmEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.ToBeSignedCrl;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.ToBeSignedRcaCtl;
+import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.ToBeSignedTlmCtl;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.Url;
 import org.certificateservices.custom.c2x.etsits102941.v131.generator.ETSITS102941MessagesCaGenerator;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.secureddata.EtsiTs103097DataSigned;
+import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIAuthorityCertGenerator;
 import org.certificateservices.custom.c2x.ieee1609dot2.crypto.Ieee1609Dot2CryptoManager;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Duration.DurationChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions.ServiceSpecificPermissionsChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.GeographicRegion;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Hostname;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Psid;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSsp;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SequenceOfHashedId8;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature.SignatureChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SubjectAssurance;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.CertificateId;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time32;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time64;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ValidityPeriod;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 
 import cits.samuca.utils.Logger;
+import cits.samuca.utils.PkiUtilsSingleton;
 import cits.samuca.pki.certificates.AuthorizationCaCertificate;
 import cits.samuca.pki.certificates.EnrolmentCaCertificate;
 import cits.samuca.pki.certificates.RootCaCertificate;
+import cits.samuca.utils.Constants;
 import cits.samuca.utils.IOUtils;
 
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature;
@@ -103,7 +119,8 @@ public class RootCa {
 				signerCertificateChain, //
 				signerPrivateKey);
 
-		IOUtils.writeCtlToFile(certificateTrustListMessage, "CTL.coer");
+		IOUtils.writeCtlToFile(certificateTrustListMessage, Constants.CERTIFICATE_TRUST_LIST_FILE);
+		IOUtils.writeCtlToFile(certificateTrustListMessage, Constants.CERTIFICATE_TRUST_LIST_FILE_FOR_COHDA);
 		Logger.shortPrint("[root CA         ] CTL written to file");
 
 	}
@@ -168,7 +185,8 @@ public class RootCa {
 //                trustStore
 //        );
 
-		IOUtils.writeCrlToFile(certificateRevocationListMessage, "CRL.coer");
+		IOUtils.writeCrlToFile(certificateRevocationListMessage, Constants.CERTIFICATE_REVOCATION_LIST_FILE);
+		IOUtils.writeCrlToFile(certificateRevocationListMessage, Constants.CERTIFICATE_REVOCATION_LIST_FILE_FOR_COHDA);
 		Logger.shortPrint("[root CA         ] CRL written to file");
 	}
 

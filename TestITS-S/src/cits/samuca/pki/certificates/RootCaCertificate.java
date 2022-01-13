@@ -17,11 +17,27 @@ import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIAuthorityCertGenerator;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BasePublicEncryptionKey.BasePublicEncryptionKeyChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BitmapSspRange;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Duration.DurationChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.GeographicRegion;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Hostname;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Psid;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSsp;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSspRange;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SequenceOfPsidSspRange;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions.ServiceSpecificPermissionsChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Signature.SignatureChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SspRange;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SspRange.SspRangeChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SubjectAssurance;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SymmAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ValidityPeriod;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.CertificateId;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.EndEntityType;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.PsidGroupPermissions;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.SubjectPermissions;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.SubjectPermissions.SubjectPermissionsChoices;
 
 import cits.samuca.utils.Constants;
 import cits.samuca.utils.Logger;
@@ -53,9 +69,8 @@ public class RootCaCertificate {
 		}
 	}
 
-	private void createRootCaCertificateAndKeyPairs()
-			throws IllegalArgumentException, SignatureException, IOException, InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
+	private void createRootCaCertificateAndKeyPairs() throws IllegalArgumentException, SignatureException, IOException,
+			InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
 
 		createRootCaKeyPairs();
 
@@ -66,13 +81,18 @@ public class RootCaCertificate {
 			IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, BadCredentialsException {
 		String rootCaName = "samuCA.autostrade.it";
 
-		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000);
+		final int assuranceLevel = 3;
+
+		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - assuranceLevel * 24 * 60 * 60 * 1000);
 		ValidityPeriod rootCaValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 45);
 
-		int minChainDepth = 3;
-		int chainDepthRange = -1;
+		int minChainDepth1 = 2;
+		int chainDepthRange1 = 0;
 
-		byte[] serviceSpecificPermissions_canSignCtlWith_EA_AA_DC_entries = Hex.decode("0138");
+		int minChainDepth2 = 1;
+		int chainDepthRange2 = 0;
+
+//		byte[] serviceSpecificPermissions_canSignCtlWith_EA_AA_DC_entries = Hex.decode("0138");
 
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
 		PublicKey signingPublicKey = this.rootCaSigningKeys.getPublic();
@@ -87,13 +107,94 @@ public class RootCaCertificate {
 
 		GeographicRegion geographicRegion = PkiUtilsSingleton.getInstance().getGeographicRegion();
 
+//		this.rootCaCertificate = authorityCertGenerator.genRootCA(//
+//				rootCaName, //
+//				rootCaValidityPeriod, //
+//				geographicRegion, //
+//				minChainDepth, //
+//				chainDepthRange, //
+//				serviceSpecificPermissions_canSignCtlWith_EA_AA_DC_entries, //
+//				signingPublicKeyAlgorithm, //
+//				signingPublicKey, //
+//				signingPrivateKey, //
+//				symmetricEncryptionAlgorithm, //
+//				publicKeyEncryptionAlgorithm, //
+//				encryptionPublicKey);
+
+//		final int confidenceLevel = 2;
+//		final SubjectAssurance subjectAssurance = new SubjectAssurance(assuranceLevel, confidenceLevel);
+		final SubjectAssurance subjectAssurance = null;
+		final CertificateId certificateId = new CertificateId(new Hostname(rootCaName));
+
+		final boolean appBoolean1 = true;
+		final boolean enrollBoolean1 = true;
+
+		final boolean appBoolean2 = false;
+		final boolean enrollBoolean2 = true;
+
+		final PsidSsp[] appPermissions = new PsidSsp[] {
+				new PsidSsp(new Psid(622),
+						new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("01"))),
+				new PsidSsp(new Psid(624), new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp,
+						Hex.decode("0138"))) };
+
+		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(36),
+								new SspRange(SspRangeChoices.bitmapSspRange,
+										new BitmapSspRange(Hex.decode("01FFFC"), Hex.decode("FF0003")))) })),
+				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		final PsidGroupPermissions secondPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(37),
+								new SspRange(SspRangeChoices.bitmapSspRange,
+										new BitmapSspRange(Hex.decode("01FFFFFF"), Hex.decode("FF000000")))) })),
+				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		final PsidGroupPermissions thirdPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(139),
+								new SspRange(SspRangeChoices.bitmapSspRange,
+										new BitmapSspRange(Hex.decode("01FFFFFFFFF8"),
+												Hex.decode("FF0000000007")))) })),
+				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		final PsidGroupPermissions fourthPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(141), null) })),
+				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		final PsidGroupPermissions fifthPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(623),
+								new SspRange(SspRangeChoices.bitmapSspRange,
+										new BitmapSspRange(Hex.decode("01C0"), Hex.decode("FF3F")))) })),
+				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		final PsidGroupPermissions sixthPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(623),
+								new SspRange(SspRangeChoices.bitmapSspRange,
+										new BitmapSspRange(Hex.decode("013E"), Hex.decode("FFC1")))) })),
+				minChainDepth2, chainDepthRange2, new EndEntityType(appBoolean2, enrollBoolean2));
+
+		final PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] { //
+				firstPsidGroupPermissions, //
+//				secondPsidGroupPermissions, //
+//				thirdPsidGroupPermissions, //
+//				fourthPsidGroupPermissions, //
+//				fifthPsidGroupPermissions, //
+//				sixthPsidGroupPermissions //
+		};
+
 		this.rootCaCertificate = authorityCertGenerator.genRootCA(//
-				rootCaName, //
+				certificateId, //
 				rootCaValidityPeriod, //
 				geographicRegion, //
-				minChainDepth, //
-				chainDepthRange, //
-				serviceSpecificPermissions_canSignCtlWith_EA_AA_DC_entries, //
+				subjectAssurance, //
+				appPermissions, //
+				certIssuePermissions, //
 				signingPublicKeyAlgorithm, //
 				signingPublicKey, //
 				signingPrivateKey, //

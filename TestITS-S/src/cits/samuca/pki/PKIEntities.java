@@ -22,6 +22,8 @@ public class PKIEntities {
 	private RootCa rootCA;
 	private EnrolmentCA enrolmentCA;
 	private AuthorizationCA authorizationCA;
+	private TrustListManager trustListManager;
+	
 	private SendingITSS sendingItsStation;
 	private ReceivingITSS receivingItsStation;
 
@@ -33,32 +35,41 @@ public class PKIEntities {
 		createRootCA();
 		createEnrolmentCA();
 		createAuthorizationCA();
+		createTlm();
 		Logger.shortPrint("");
 	}
 
 	private void createRootCA() throws Exception {
-		rootCA = new RootCa();
+		this.rootCA = new RootCa();
 		Logger.shortPrint("");
 	}
 
 	private void createEnrolmentCA() throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException,
 			SignatureException, IOException, BadCredentialsException {
-		enrolmentCA = new EnrolmentCA();
+		this.enrolmentCA = new EnrolmentCA();
 
-		enrolmentCA.setCertificate(rootCA.getEnrolmentCaCertificate());
-		enrolmentCA.setSigningKeys(rootCA.getEnrolmentCaSigningKeys());
-		enrolmentCA.setEncrptionKeys(rootCA.getEnrolmentCaEncryptionKeys());
-		enrolmentCA.setEnrolmentCaChain(rootCA.getEnrolmentCaChain());
+		this.enrolmentCA.setCertificate(this.rootCA.getEnrolmentCaCertificate());
+		this.enrolmentCA.setSigningKeys(this.rootCA.getEnrolmentCaSigningKeys());
+		this.enrolmentCA.setEncrptionKeys(this.rootCA.getEnrolmentCaEncryptionKeys());
+		this.enrolmentCA.setEnrolmentCaChain(this.rootCA.getEnrolmentCaChain());
 	}
 
 	private void createAuthorizationCA() throws IllegalArgumentException, NoSuchAlgorithmException,
 			NoSuchProviderException, SignatureException, IOException, BadCredentialsException {
-		authorizationCA = new AuthorizationCA();
+		this.authorizationCA = new AuthorizationCA();
 
-		authorizationCA.setCertificate(rootCA.getAuthorizationCaCertificate());
-		authorizationCA.setSigningKeys(rootCA.getAuthorizationCaSigningKeys());
-		authorizationCA.setEncryptionKeys(rootCA.getAuthorizationCaEncryptionKeys());
-		authorizationCA.setAuthorizationCaChain(rootCA.getAuthorizationCaChain());
+		this.authorizationCA.setCertificate(this.rootCA.getAuthorizationCaCertificate());
+		this.authorizationCA.setSigningKeys(this.rootCA.getAuthorizationCaSigningKeys());
+		this.authorizationCA.setEncryptionKeys(this.rootCA.getAuthorizationCaEncryptionKeys());
+		this.authorizationCA.setAuthorizationCaChain(this.rootCA.getAuthorizationCaChain());
+	}
+	
+	private void createTlm()
+			throws Exception
+	{
+		this.trustListManager = new TrustListManager();
+		
+		this.trustListManager.setRootCaCertificate(this.rootCA.getRootCaCertificate());
 	}
 
 	// called only by PlainPkiNoHttp
@@ -141,12 +152,4 @@ public class PKIEntities {
 		return this.receivingItsStation;
 	}
 
-//	public void generateCTL() {
-//		try {
-//			this.rootCA.generateCTL();
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
 }
