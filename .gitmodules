@@ -1,0 +1,3 @@
+[submodule "c2c-common"]
+	path = c2c-common
+	url = https://github.com/sacardi/c2c-common.git
