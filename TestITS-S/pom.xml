@@ -72,6 +72,13 @@
             <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
+		<!-- https://mvnrepository.com/artifact/net.time4j/time4j-core -->
+		<dependency>
+		    <groupId>net.time4j</groupId>
+		    <artifactId>time4j-core</artifactId>
+		    <version>4.38</version>
+		</dependency>
+
     </dependencies>
   
   <build>
