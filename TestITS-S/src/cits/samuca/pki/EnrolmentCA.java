@@ -84,7 +84,7 @@ public class EnrolmentCA {
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
-		Logger.debugPrint("[enrolment CA    ] 0a) obtained certificate " + cert);
+//		Logger.debugPrint("[enrolment CA    ] 0a) obtained certificate " + cert);
 		Logger.shortPrint("[enrolment CA    ] 0a) obtained certificate");
 		this.myCertificate = cert;
 	}

@@ -73,7 +73,10 @@ public class AuthorizationCaCertificate {
 				Constants.AUTHORIZATION_CA_ENCRYPTION_KEYS_PUBLIC_KEY_FILE);
 
 		String aAName = "AA.samuCA.autostrade.it";
-		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000);
+
+		final long daysOffset = 3;
+
+		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - daysOffset * 24 * 60 * 60 * 1000);
 		ValidityPeriod authorityCAValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 15);
 		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;

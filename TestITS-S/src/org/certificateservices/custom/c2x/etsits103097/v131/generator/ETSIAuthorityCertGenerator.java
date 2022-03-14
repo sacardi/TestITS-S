@@ -18,6 +18,7 @@ import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.Ets
 import org.certificateservices.custom.c2x.ieee1609dot2.crypto.Ieee1609Dot2CryptoManager;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.*;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BasePublicEncryptionKey.BasePublicEncryptionKeyChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SspRange.SspRangeChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.*;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.SubjectPermissions.SubjectPermissionsChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.generator.BaseAuthorityCertGenerator;
@@ -263,6 +264,89 @@ public class ETSIAuthorityCertGenerator extends BaseAuthorityCertGenerator {
 
 		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.opaque, Hex.decode("010E")));
 		PsidSsp[] appPermissions = new PsidSsp[] {appPermCertMan};
+
+		return genSubCA(id, validityPeriod, region, subjectAssurance, appPermissions, certIssuePermissions, signingPublicKeyAlgorithm, signPublicKey, signerCertificate, signCertificatePublicKey,signCertificatePrivateKey, symmAlgorithm, encPublicKeyAlgorithm, encPublicKey);
+	}
+	
+
+	/**
+	 * Method to generate a simple enrollment CA with all cert permissions for enrollment CAs.
+	 *
+	 * @param caName the id if the certificate, a string representation, Required.
+	 * @param validityPeriod the validity period of this certificate, Required
+	 * @param region the geographic region of the certificate, Optional
+	 * @param subjectAssurance the subjectAssurance, Optional.
+	 * @param signingPublicKeyAlgorithm algorithm used for signing and verification, Required if type is explicit
+	 * @param signPublicKey public key used for verification of this certificate, Required
+	 * @param signerCertificate the signing certificate (Root CA), Required
+	 * @param signCertificatePublicKey the signing certificates public key, Required
+	 * @param signCertificatePrivateKey the signing certificates private key, Required
+	 * @param encPublicKeyAlgorithm algorithm used for encryption, null if no encryption key should be included.
+	 * @param encPublicKey public key used for encryption, null if no encryption key should be included.
+	 * @return a new signed certificate with enrollment CA profile.
+	 *
+	 * @throws IllegalArgumentException if supplied arguments was illegal.
+	 * @throws SignatureException if internal signature problems occurred.
+	 * @throws IOException if communication problems with underlying systems occurred generating the certificate.
+	 */
+	public EtsiTs103097Certificate genCustomEnrollmentCA(
+			String caName,
+			ValidityPeriod validityPeriod,
+			GeographicRegion region,
+			SubjectAssurance subjectAssurance,
+			AlgorithmIndicator signingPublicKeyAlgorithm,
+			PublicKey signPublicKey,
+			Certificate signerCertificate,
+			PublicKey signCertificatePublicKey,
+			PrivateKey signCertificatePrivateKey,
+			SymmAlgorithm symmAlgorithm,
+			BasePublicEncryptionKeyChoices encPublicKeyAlgorithm,
+			PublicKey encPublicKey) throws IllegalArgumentException,  SignatureException, IOException{
+
+		CertificateId id = new CertificateId(new Hostname(caName));
+
+		// TODO More specific security management permissions.
+		SubjectPermissions sp = new SubjectPermissions(SubjectPermissionsChoices.all, null);
+		PsidGroupPermissions pgp =  new PsidGroupPermissions(sp, 1, 0, new EndEntityType(false, true));
+
+		int minChainDepth1 = 2;
+		int chainDepthRange1 = 0;
+		int minChainDepth2 = 1;
+		int chainDepthRange2 = 0;
+		
+		final boolean appBoolean1 = true;
+		final boolean enrollBoolean1 = true;
+		final boolean appBoolean2 = false;
+		final boolean enrollBoolean2 = true;
+		
+		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(36),
+								new SspRange(SspRangeChoices.bitmapSspRange,
+										new BitmapSspRange(Hex.decode("01FFFC"), Hex.decode("FF0003")))) })),
+				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+//		final PsidGroupPermissions secondPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(37),
+//								new SspRange(SspRangeChoices.bitmapSspRange,
+//										new BitmapSspRange(Hex.decode("01FFFFFF"), Hex.decode("FF000000")))) })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+//		
+//		final PsidGroupPermissions sixthPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(623),
+//								new SspRange(SspRangeChoices.bitmapSspRange,
+//										new BitmapSspRange(Hex.decode("013E"), Hex.decode("FFC1")))) })),
+//				minChainDepth2, chainDepthRange2, new EndEntityType(appBoolean2, enrollBoolean2));
+
+//		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {pgp};
+		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {firstPsidGroupPermissions};
+		
+//		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("010E")));
+		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("") ));
+		PsidSsp[] appPermissions = new PsidSsp[] {appPermCertMan};
+//		appPermissions = null;
 
 		return genSubCA(id, validityPeriod, region, subjectAssurance, appPermissions, certIssuePermissions, signingPublicKeyAlgorithm, signPublicKey, signerCertificate, signCertificatePublicKey,signCertificatePrivateKey, symmAlgorithm, encPublicKeyAlgorithm, encPublicKey);
 	}

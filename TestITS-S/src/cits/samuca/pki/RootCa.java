@@ -86,8 +86,8 @@ public class RootCa {
 		final Url aaAccessPoint = GenericCreationUtils.createUrl("http://localhost:8080/samuCA/authorizationCA");
 		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://localhost:8080/samuCA/dummy");
 
-		final byte[] rootCaEncodedCertificate = this.rootCaCertificate.getEncodedCertificate();
-		HashedId8[] digestsOfTrustedCertificates = { new HashedId8(rootCaEncodedCertificate) };
+		final HashedId8 rootCaEncodedCertificate = this.rootCaCertificate.getCertificateHashedId8();
+		HashedId8[] digestsOfTrustedCertificates = { rootCaEncodedCertificate };
 
 		final CtlCommand[] ctlCommands = new CtlCommand[] { //
 				new CtlCommand(new CtlEntry(

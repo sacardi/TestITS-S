@@ -28,8 +28,10 @@ import net.time4j.scale.TimeScale;
 public class Time32 extends Uint32 {
 	
 	private static final long serialVersionUID = 1L;
-	
-	private static final long SECONDSBETWEENTAIZEROAND2004 = 1009843232L;
+
+	// hardcoding shift of 5113 days (~ 14 years) backwards. I don't know why
+	private static final long SECONDSBETWEENTAIZEROAND2004 = 1009843232L + 5113 * 24 * 60 * 60;
+//	private static final long SECONDSBETWEENTAIZEROAND2004 = 1009843232L ;
 	                                                          
 	/**
 	 * Constructor used when decoding

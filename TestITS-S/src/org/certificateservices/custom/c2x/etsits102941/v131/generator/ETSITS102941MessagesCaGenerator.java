@@ -1056,7 +1056,7 @@ public class ETSITS102941MessagesCaGenerator {
      * @throws SignatureException if problems occurred generating the exception.
      */
     public EtsiTs103097DataSigned genCertificateRevocationListMessage(Time64 generationTime, ToBeSignedCrl toBeSignedCrl, EtsiTs103097Certificate[] signerCertificateChain, PrivateKey signerPrivateKey) throws IOException, SignatureException {
-        return genSignedCTLMessage(generationTime,new EtsiTs102941DataContent(toBeSignedCrl), signerCertificateChain,signerPrivateKey);
+        return genSignedCRLMessage(generationTime,new EtsiTs102941DataContent(toBeSignedCrl), signerCertificateChain,signerPrivateKey);
     }
 
     /**
@@ -1334,6 +1334,10 @@ public class ETSITS102941MessagesCaGenerator {
     protected HeaderInfo genHeaderInfo(Time64 generationTime){
         return new HeaderInfo(AvailableITSAID.SecuredCertificateRequestService,generationTime,null,null,null,null,null,null,null);
     }
+    
+    protected HeaderInfo genCustomHeaderInfo(Time64 generationTime, Psid itsAid){
+        return new HeaderInfo(itsAid,generationTime,null,null,null,null,null,null,null);
+    }
 
     /**
      * Method to retrieve a header info from a
@@ -1419,8 +1423,14 @@ public class ETSITS102941MessagesCaGenerator {
      * @throws SignatureException if problems occurred generating the exception.
      */
     public EtsiTs103097DataSigned genSignedCTLMessage(Time64 generationTime, EtsiTs102941DataContent etsiTs102941DataContent, EtsiTs103097Certificate[] signerCertificateChain, PrivateKey signerPrivateKey) throws IOException, SignatureException {
-        EtsiTs102941Data etsiTs102941Data = new EtsiTs102941Data(Version.V1, etsiTs102941DataContent);
-        HeaderInfo headerInfo = genHeaderInfo(generationTime);
+        EtsiTs102941Data etsiTs102941Data = new EtsiTs102941Data(Version.V1_1_1, etsiTs102941DataContent);
+        HeaderInfo headerInfo = genCustomHeaderInfo(generationTime, AvailableITSAID.CTLService);
+        return securedDataGenerator.genEtsiTs103097DataSigned(headerInfo, etsiTs102941Data.getEncoded(), SecuredDataGenerator.SignerIdentifierType.SIGNER_CERTIFICATE,signerCertificateChain,signerPrivateKey);
+    }
+    
+    public EtsiTs103097DataSigned genSignedCRLMessage(Time64 generationTime, EtsiTs102941DataContent etsiTs102941DataContent, EtsiTs103097Certificate[] signerCertificateChain, PrivateKey signerPrivateKey) throws IOException, SignatureException {
+        EtsiTs102941Data etsiTs102941Data = new EtsiTs102941Data(Version.V1_1_1, etsiTs102941DataContent);
+        HeaderInfo headerInfo = genCustomHeaderInfo(generationTime, AvailableITSAID.CRLService);
         return securedDataGenerator.genEtsiTs103097DataSigned(headerInfo, etsiTs102941Data.getEncoded(), SecuredDataGenerator.SignerIdentifierType.SIGNER_CERTIFICATE,signerCertificateChain,signerPrivateKey);
     }
 

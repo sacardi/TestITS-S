@@ -10,11 +10,15 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Date;
 
-import org.certificateservices.custom.c2x.common.crypto.BadCredentialsException;
+import org.bouncycastle.util.encoders.Hex;
 import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.generator.ETSIAuthorityCertGenerator;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.GeographicRegion;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Psid;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSsp;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ServiceSpecificPermissions.ServiceSpecificPermissionsChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SubjectAssurance;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SymmAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.ValidityPeriod;
@@ -75,7 +79,10 @@ public class EnrolmentCaCertificate {
 				Constants.ENROLMENT_CA_ENCRYPTION_KEYS_PUBLIC_KEY_FILE);
 
 		String eAName = "EA.samuCA.autostrade.it";
-		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000);
+
+		final long daysOffset = 3;
+
+		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - daysOffset * 24 * 60 * 60 * 1000);
 		ValidityPeriod enrolmentCAValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 37);
 		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
@@ -103,7 +110,8 @@ public class EnrolmentCaCertificate {
 				publicKeyEncryptionAlgorithm, //
 				encryptionPublicKey, //
 				authorityCertGenerator, //
-				geographicRegion);
+				geographicRegion//
+		);
 
 		this.enrolmentCaChain = new EtsiTs103097Certificate[] { this.enrolmentCaCertificate, this.rootCaCertificate };
 
@@ -120,7 +128,7 @@ public class EnrolmentCaCertificate {
 			GeographicRegion geographicRegion) {
 
 		try {
-			this.enrolmentCaCertificate = authorityCertGenerator.genEnrollmentCA(eAName, //
+			this.enrolmentCaCertificate = authorityCertGenerator.genCustomEnrollmentCA(eAName, //
 					enrolmentCAValidityPeriod, //
 					geographicRegion, //
 					subjectAssurance, //
@@ -131,7 +139,7 @@ public class EnrolmentCaCertificate {
 					signerCertificatePrivateKey, //
 					symmetricEncryptionAlgorithm, //
 					publicKeyEncryptionAlgorithm, //
-					encryptionPublicKey //
+					encryptionPublicKey//
 			);
 
 		} catch (IllegalArgumentException | SignatureException | IOException e) {

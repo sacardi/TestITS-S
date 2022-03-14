@@ -3,6 +3,7 @@ package cits.samuca.pki.certificates;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
@@ -16,6 +17,7 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BasePub
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.BitmapSspRange;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Duration.DurationChoices;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.GeographicRegion;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Hostname;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Psid;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.PsidSsp;
@@ -34,6 +36,7 @@ import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.EndEntit
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.PsidGroupPermissions;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.SubjectPermissions;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.cert.SubjectPermissions.SubjectPermissionsChoices;
+import org.certificateservices.custom.c2x.ieee1609dot2.generator.CertChainBuilder;
 
 import cits.samuca.utils.Constants;
 import cits.samuca.utils.Logger;
@@ -54,7 +57,7 @@ public class RootCaCertificate {
 	}
 
 	private void readOrCreateCertificateAndKeyPairs() {
-		
+
 		if (Constants.READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM) {
 			readRootCaCertificateAndKeyPairs();
 		} else {
@@ -72,10 +75,20 @@ public class RootCaCertificate {
 	private void createRootCaCertificate() {
 		String rootCaName = "samuCA.autostrade.it";
 
-		final int assuranceLevel = 3;
+		// hardcoded value due to Time32 encoding
+		// TODO: find a workaround
+//		final long daysOffset = 3 + 5113 ;
+		final long daysOffset = 3;
 
-		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - assuranceLevel * 24 * 60 * 60 * 1000);
+		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - daysOffset * 24 * 60 * 60 * 1000);
+
 		ValidityPeriod rootCaValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 45);
+
+//		System.out.println(System.currentTimeMillis());
+//		System.out.println(daysOffset * 24 * 60 * 60 * 1000);
+//		System.out.println(System.currentTimeMillis() - daysOffset * 24 * 60 * 60 * 1000);
+//		System.out.println(threeDaysBeforeNow);
+//		System.out.println(rootCaValidityPeriod);
 
 		int minChainDepth1 = 2;
 		int chainDepthRange1 = 0;
@@ -92,7 +105,8 @@ public class RootCaCertificate {
 		SymmAlgorithm symmetricEncryptionAlgorithm = SymmAlgorithm.aes128Ccm;
 
 		BasePublicEncryptionKeyChoices publicKeyEncryptionAlgorithm = BasePublicEncryptionKeyChoices.ecdsaNistP256;
-		PublicKey encryptionPublicKey = this.rootCaEncryptionKeys.getPublic();
+//		PublicKey encryptionPublicKey = this.rootCaEncryptionKeys.getPublic();
+		PublicKey encryptionPublicKey = null;
 
 		ETSIAuthorityCertGenerator authorityCertGenerator = PkiUtilsSingleton.getInstance().getAuthorityCertGenerator();
 
@@ -334,17 +348,19 @@ public class RootCaCertificate {
 		return this.rootCaEncryptionKeys;
 	}
 
-	public byte[] getEncodedCertificate() {
-		byte[] encodedCertificate = null;
+	public HashedId8 getCertificateHashedId8() {
+		HashedId8 certificateHashedId8 = null;
+
+		CertChainBuilder certChainBuilder = new CertChainBuilder(PkiUtilsSingleton.getInstance().getCryptoManager());
 
 		try {
-			encodedCertificate = this.rootCaCertificate.getEncoded();
-		} catch (IOException e) {
+			certificateHashedId8 = certChainBuilder.getCertID(this.rootCaCertificate);
+		} catch (IllegalArgumentException | NoSuchAlgorithmException | IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.exit(1);
 		}
 
-		return encodedCertificate;
+		return certificateHashedId8;
 	}
 
 }
