@@ -203,7 +203,7 @@ public class AuthorizationCA {
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
-		Logger.debugPrint("[authorization CA] 0b) obtained certificate: " + cert);
+//		Logger.debugPrint("[authorization CA] 0b) obtained certificate: " + cert);
 		Logger.shortPrint("[authorization CA] 0b) obtained certificate");
 		this.myCertificate = cert;
 	}

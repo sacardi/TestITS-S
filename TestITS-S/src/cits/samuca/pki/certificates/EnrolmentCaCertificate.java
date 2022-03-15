@@ -83,7 +83,7 @@ public class EnrolmentCaCertificate {
 		final long daysOffset = 3;
 
 		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - daysOffset * 24 * 60 * 60 * 1000);
-		ValidityPeriod enrolmentCAValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 37);
+		ValidityPeriod enrolmentCAValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 5);
 //		SubjectAssurance subjectAssurance = new SubjectAssurance(1, 3);
 		SubjectAssurance subjectAssurance = null;
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;

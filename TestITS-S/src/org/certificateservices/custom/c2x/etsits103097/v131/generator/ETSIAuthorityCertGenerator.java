@@ -311,16 +311,93 @@ public class ETSIAuthorityCertGenerator extends BaseAuthorityCertGenerator {
 
 		int minChainDepth1 = 1;
 		int chainDepthRange1 = 0;
-		
+		int minChainDepth2 = 1;
+		int chainDepthRange2 = 0;
+
 		final boolean appBoolean1 = false;
 		final boolean enrollBoolean1 = true;
+		final boolean appBoolean2 = true;
+		final boolean enrollBoolean2 = false;
 		
+//		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(36),
+//								new SspRange(SspRangeChoices.bitmapSspRange,
+//										new BitmapSspRange(Hex.decode("01FFFC"), Hex.decode("FF0003")))) })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+		
+
+		PsidSspRange psidSspRange36 = new PsidSspRange(new Psid(36), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFC"), Hex.decode("FF0003"))));
+		PsidSspRange psidSspRange37 = new PsidSspRange(new Psid(37), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFFFF"), Hex.decode("FF000000"))));
+//		final PsidGroupPermissions secondPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { secondPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		PsidSspRange psidSspRange137 = new PsidSspRange(new Psid(137), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01E0"), Hex.decode("FF1F"))));
+
+		PsidSspRange psidSspRange138 = new PsidSspRange(new Psid(138), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01C0"), Hex.decode("FF3F"))));
+
+		PsidSspRange psidSspRange139 = new PsidSspRange(new Psid(139), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFFFFFFF8"), Hex.decode("FF0000000007"))));
+
+		PsidSspRange psidSspRange140 = new PsidSspRange(new Psid(140), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFFE0"), Hex.decode("FF00001F"))));
+
+//		final PsidGroupPermissions thirdPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { thirdPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		PsidSspRange psidSspRange141 = new PsidSspRange(new Psid(141), null);
+//		final PsidGroupPermissions fourthPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { fourthPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		PsidSspRange psidSspRange623 = new PsidSspRange(new Psid(623), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01C0"), Hex.decode("FF3F"))));
+//		final PsidGroupPermissions fifthPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { fifthPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
 		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
-				new SubjectPermissions(SubjectPermissionsChoices.explicit,
-						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(36),
-								new SspRange(SspRangeChoices.bitmapSspRange,
-										new BitmapSspRange(Hex.decode("01FFFC"), Hex.decode("FF0003")))) })),
+				new SubjectPermissions(SubjectPermissionsChoices.explicit, //
+						new SequenceOfPsidSspRange(new PsidSspRange[] { //
+								psidSspRange36, //
+								psidSspRange37, //
+								psidSspRange137, //
+								psidSspRange138, //
+								psidSspRange139, //
+								psidSspRange140, //
+								psidSspRange141, //
+								psidSspRange623 //
+						})), //
 				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		PsidSspRange sixthPsidSspRange = new PsidSspRange(new Psid(623), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01C0"), Hex.decode("FF3F"))));
+
+		final PsidGroupPermissions sixthPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit, //
+						new SequenceOfPsidSspRange(new PsidSspRange[] { //
+								sixthPsidSspRange //
+						})), //
+				minChainDepth2, chainDepthRange2, new EndEntityType(appBoolean2, enrollBoolean2));
+
+		final PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] { //
+				firstPsidGroupPermissions, //
+//				secondPsidGroupPermissions, //
+//				thirdPsidGroupPermissions, //
+//				fourthPsidGroupPermissions, //
+//				fifthPsidGroupPermissions, //
+				sixthPsidGroupPermissions //
+		};
 
 //		final PsidGroupPermissions secondPsidGroupPermissions = new PsidGroupPermissions(
 //				new SubjectPermissions(SubjectPermissionsChoices.explicit,
@@ -337,7 +414,7 @@ public class ETSIAuthorityCertGenerator extends BaseAuthorityCertGenerator {
 //				minChainDepth2, chainDepthRange2, new EndEntityType(appBoolean2, enrollBoolean2));
 
 //		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {pgp};
-		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {firstPsidGroupPermissions};
+//		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {firstPsidGroupPermissions};
 		
 //		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("010E")));
 		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("010E") ));
@@ -388,6 +465,114 @@ public class ETSIAuthorityCertGenerator extends BaseAuthorityCertGenerator {
 		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {pgp};
 
 		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.opaque, Hex.decode("0132")));
+		PsidSsp[] appPermissions = new PsidSsp[] {appPermCertMan};
+
+		return genSubCA(id, validityPeriod, region, subjectAssurance, appPermissions, certIssuePermissions, signingPublicKeyAlgorithm, signPublicKey, signerCertificate, signCertificatePublicKey,signCertificatePrivateKey, symmAlgorithm, encPublicKeyAlgorithm, encPublicKey);
+	}
+	
+	public EtsiTs103097Certificate genCustomAuthorizationCA(
+			String caName,
+			ValidityPeriod validityPeriod,
+			GeographicRegion region,
+			SubjectAssurance subjectAssurance,
+			AlgorithmIndicator signingPublicKeyAlgorithm,
+			PublicKey signPublicKey,
+			Certificate signerCertificate,
+			PublicKey signCertificatePublicKey,
+			PrivateKey signCertificatePrivateKey,
+			SymmAlgorithm symmAlgorithm,
+			BasePublicEncryptionKeyChoices encPublicKeyAlgorithm,
+			PublicKey encPublicKey) throws IllegalArgumentException,  SignatureException, IOException{
+
+		CertificateId id = new CertificateId(new Hostname(caName));
+        // TODO More specific security management permissions.
+		SubjectPermissions sp = new SubjectPermissions(SubjectPermissionsChoices.all, null);
+		PsidGroupPermissions pgp =  new PsidGroupPermissions(sp, 1, 0, new EndEntityType(true, false));
+		
+
+		int minChainDepth1 = 1;
+		int chainDepthRange1 = 0;
+
+		final boolean appBoolean1 = true;
+		final boolean enrollBoolean1 = false;
+		
+//		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { new PsidSspRange(new Psid(36),
+//								new SspRange(SspRangeChoices.bitmapSspRange,
+//										new BitmapSspRange(Hex.decode("01FFFC"), Hex.decode("FF0003")))) })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+		
+
+		PsidSspRange psidSspRange36 = new PsidSspRange(new Psid(36), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFC"), Hex.decode("FF0003"))));
+		PsidSspRange psidSspRange37 = new PsidSspRange(new Psid(37), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFFFF"), Hex.decode("FF000000"))));
+//		final PsidGroupPermissions secondPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { secondPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		PsidSspRange psidSspRange137 = new PsidSspRange(new Psid(137), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01E0"), Hex.decode("FF1F"))));
+
+		PsidSspRange psidSspRange138 = new PsidSspRange(new Psid(138), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01C0"), Hex.decode("FF3F"))));
+
+		PsidSspRange psidSspRange139 = new PsidSspRange(new Psid(139), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFFFFFFF8"), Hex.decode("FF0000000007"))));
+
+		PsidSspRange psidSspRange140 = new PsidSspRange(new Psid(140), new SspRange(SspRangeChoices.bitmapSspRange,
+				new BitmapSspRange(Hex.decode("01FFFFE0"), Hex.decode("FF00001F"))));
+
+//		final PsidGroupPermissions thirdPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { thirdPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		PsidSspRange psidSspRange141 = new PsidSspRange(new Psid(141), null);
+//		final PsidGroupPermissions fourthPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { fourthPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+//		PsidSspRange psidSspRange623 = new PsidSspRange(new Psid(623), new SspRange(SspRangeChoices.bitmapSspRange,
+//				new BitmapSspRange(Hex.decode("01C0"), Hex.decode("FF3F"))));
+//		final PsidGroupPermissions fifthPsidGroupPermissions = new PsidGroupPermissions(
+//				new SubjectPermissions(SubjectPermissionsChoices.explicit,
+//						new SequenceOfPsidSspRange(new PsidSspRange[] { fifthPsidSspRange })),
+//				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
+				new SubjectPermissions(SubjectPermissionsChoices.explicit, //
+						new SequenceOfPsidSspRange(new PsidSspRange[] { //
+								psidSspRange36, //
+								psidSspRange37, //
+								psidSspRange137, //
+								psidSspRange138, //
+								psidSspRange139, //
+								psidSspRange140, //
+								psidSspRange141, //
+//								psidSspRange623 //
+						})), //
+				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+
+//		PsidSspRange sixthPsidSspRange = new PsidSspRange(new Psid(623), new SspRange(SspRangeChoices.bitmapSspRange,
+//				new BitmapSspRange(Hex.decode("01C0"), Hex.decode("FF3F"))));
+
+
+		final PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] { //
+				firstPsidGroupPermissions, //
+//				secondPsidGroupPermissions, //
+//				thirdPsidGroupPermissions, //
+//				fourthPsidGroupPermissions, //
+//				fifthPsidGroupPermissions, //
+//				sixthPsidGroupPermissions //
+		};
+		
+//		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {pgp};
+
+		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("0132")));
 		PsidSsp[] appPermissions = new PsidSsp[] {appPermCertMan};
 
 		return genSubCA(id, validityPeriod, region, subjectAssurance, appPermissions, certIssuePermissions, signingPublicKeyAlgorithm, signPublicKey, signerCertificate, signCertificatePublicKey,signCertificatePrivateKey, symmAlgorithm, encPublicKeyAlgorithm, encPublicKey);
