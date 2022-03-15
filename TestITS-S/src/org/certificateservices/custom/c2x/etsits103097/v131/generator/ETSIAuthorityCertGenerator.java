@@ -309,15 +309,11 @@ public class ETSIAuthorityCertGenerator extends BaseAuthorityCertGenerator {
 		SubjectPermissions sp = new SubjectPermissions(SubjectPermissionsChoices.all, null);
 		PsidGroupPermissions pgp =  new PsidGroupPermissions(sp, 1, 0, new EndEntityType(false, true));
 
-		int minChainDepth1 = 2;
+		int minChainDepth1 = 1;
 		int chainDepthRange1 = 0;
-		int minChainDepth2 = 1;
-		int chainDepthRange2 = 0;
 		
-		final boolean appBoolean1 = true;
+		final boolean appBoolean1 = false;
 		final boolean enrollBoolean1 = true;
-		final boolean appBoolean2 = false;
-		final boolean enrollBoolean2 = true;
 		
 		final PsidGroupPermissions firstPsidGroupPermissions = new PsidGroupPermissions(
 				new SubjectPermissions(SubjectPermissionsChoices.explicit,
@@ -344,7 +340,7 @@ public class ETSIAuthorityCertGenerator extends BaseAuthorityCertGenerator {
 		PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] {firstPsidGroupPermissions};
 		
 //		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("010E")));
-		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("") ));
+		PsidSsp appPermCertMan = new PsidSsp(SecuredCertificateRequestService, new ServiceSpecificPermissions(ServiceSpecificPermissions.ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("010E") ));
 		PsidSsp[] appPermissions = new PsidSsp[] {appPermCertMan};
 //		appPermissions = null;
 

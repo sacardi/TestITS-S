@@ -116,7 +116,10 @@ public class PkiUtilsSingleton {
 	}
 
 	public GeographicRegion getGeographicRegion() {
-		return this.geographicRegion;
+//		return this.geographicRegion;
+		
+		// [provisional] to avoid problems with region
+		return null;
 	}
 
 }
