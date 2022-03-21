@@ -30,7 +30,6 @@ public class Constants {
 	public static final String CERTIFICATE_REVOCATION_LIST_FILE = "certificate_revocation_list.coer";
 	public static final String CERTIFICATE_TRUST_LIST_FILE = "certificate_trust_list.coer";
 	public static final String EUROPEAN_CERTIFICATE_TRUST_LIST_FILE = "european_certificate_trust_list.coer";
-	
 
 	public static final String TLM_CERTIFICATE_FILE_FOR_COHDA = "tlm.etsi";
 	public static final String CERTIFICATE_REVOCATION_LIST_FILE_FOR_COHDA = "crl.etsi";
@@ -40,4 +39,6 @@ public class Constants {
 	public static final String SENDING_ITSS_ENROLMENT_REQUEST_MESSAGE = "sending_itss_enrolment_request_message.coer";
 
 	public static final boolean READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM = false;
+
+	public static final String IP_ADDRESS = "192.168.1.104";
 }

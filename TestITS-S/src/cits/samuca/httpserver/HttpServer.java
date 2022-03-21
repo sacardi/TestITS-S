@@ -13,6 +13,7 @@ import akka.http.javadsl.server.Route;
 import akka.japi.function.Function;
 import cits.samuca.httpserver.HttpServerMessages.Message;
 import cits.samuca.pki.PKIEntities;
+import cits.samuca.utils.Constants;
 import akka.actor.typed.ActorSystem;
 
 public class HttpServer {
@@ -20,7 +21,7 @@ public class HttpServer {
 	private ActorSystem<HttpServerMessages.Message> actorSystem;
 	private PKIEntities pki;
 
-	private String address = "localhost";
+	private String address = Constants.IP_ADDRESS;
 	private Integer port = 8080;
 
 	public HttpServer(PKIEntities pki) {

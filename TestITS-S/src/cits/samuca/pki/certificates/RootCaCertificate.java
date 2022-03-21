@@ -82,7 +82,7 @@ public class RootCaCertificate {
 
 		final Date threeDaysBeforeNow = new Date(System.currentTimeMillis() - daysOffset * 24 * 60 * 60 * 1000);
 
-		ValidityPeriod rootCaValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 8);
+		ValidityPeriod rootCaValidityPeriod = new ValidityPeriod(threeDaysBeforeNow, DurationChoices.years, 5);
 
 //		System.out.println(System.currentTimeMillis());
 //		System.out.println(daysOffset * 24 * 60 * 60 * 1000);

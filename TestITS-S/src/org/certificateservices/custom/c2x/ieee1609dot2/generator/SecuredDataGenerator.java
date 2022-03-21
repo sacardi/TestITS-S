@@ -643,7 +643,7 @@ public class SecuredDataGenerator {
 	 * inline peer-to-peer certificate distribution mechanism is given in Clause 8. This field shall only be
 	 * present if p2pcdLearningRequest is not present. The HashedId3 is calculated with the whole certificate
 	 * hash algorithm, determined as described in 6.4.3.
-	 * @param requestedCertificate if present, is used by the SDS to provide certificates per the “inline”
+	 * @param requestedCertificate if present, is used by the SDS to provide certificates per the â€œinlineâ€�
 	 * version of the peer-to-peer certificate distribution mechanism.
 	 * @return a generated header info structure.
 	 * @throws IllegalArgumentException if supplied arguments where invalid.
@@ -794,6 +794,7 @@ public class SecuredDataGenerator {
 			si = new SignerIdentifier();
 		}
 		Signature signature = cryptoManager.signMessage(tbsData.getEncoded(), signAlgorithm,  signerPrivateKey, certificateType, signingCert);
+//		Signature signature = cryptoManager.signMessageDigest(tbsData.getEncoded(), signAlgorithm,  signerPrivateKey);
 
 		SignedData signedData = new SignedData(hashAlgorithm, tbsData, si, signature);
 

@@ -9,12 +9,16 @@ import java.util.Date;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.basetypes.Version;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.CtlCommand;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.CtlEntry;
+import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.DcEntry;
+import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.RootCaEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.TlmEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.ToBeSignedTlmCtl;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.Url;
 import org.certificateservices.custom.c2x.etsits102941.v131.generator.ETSITS102941MessagesCaGenerator;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.secureddata.EtsiTs103097DataSigned;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SequenceOfHashedId8;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time32;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time64;
 
@@ -31,10 +35,15 @@ public class TrustListManager {
 
 	private EtsiTs103097Certificate rootCaCertificate;
 
+	private HashedId8 rootCaCertificateHashedId8;
+
 	static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
 
-	public TrustListManager() {
+	public TrustListManager(EtsiTs103097Certificate rootCaCertificate, HashedId8 rootCaCertificateHashedId8) {
 
+		this.rootCaCertificate = rootCaCertificate;
+		this.rootCaCertificateHashedId8 = rootCaCertificateHashedId8;
+		
 		this.trustListManagerCertificate = new TrustListManagerCertificate();
 
 		ToBeSignedTlmCtl toBeSignedEctl = generateEctlRequest();
@@ -42,7 +51,7 @@ public class TrustListManager {
 		final Time64 signingGenerationTime = new Time64(new Date());
 
 		final EtsiTs103097Certificate[] signerCertificateChain = new EtsiTs103097Certificate[] {
-				this.trustListManagerCertificate.getCertificate(), this.rootCaCertificate };
+				this.trustListManagerCertificate.getCertificate() };
 
 		final PrivateKey signerPrivateKey = this.trustListManagerCertificate.getSigningKeys().getPrivate();
 
@@ -91,9 +100,19 @@ public class TrustListManager {
 //
 //		HashedId8[] certificateDigests = { new HashedId8(this.rootCaCertificate.getCertificate().getEncoded()) };
 
+
+		
+		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/dummy");
+		final HashedId8 rootCaEncodedCertificate = this.rootCaCertificateHashedId8;
+		HashedId8[] digestsOfTrustedCertificates = { rootCaEncodedCertificate };
+		
 		final CtlCommand[] ctlCommands = new CtlCommand[] { //
 				new CtlCommand(new CtlEntry(
-						new TlmEntry(this.trustListManagerCertificate.getCertificate(), null, CpocAccessPoint))),
+						new RootCaEntry(this.rootCaCertificate, null))), //
+				new CtlCommand(new CtlEntry(
+						new DcEntry(dcAccessPoint, new SequenceOfHashedId8(digestsOfTrustedCertificates)))), //
+				new CtlCommand(new CtlEntry(
+						new TlmEntry(this.trustListManagerCertificate.getCertificate(), null, CpocAccessPoint))), //
 //				new CtlCommand(new CtlEntry(
 //						new EaEntry(this.enrolmentCaCertificate.getCertificate(), eaAccessPoint, itsAccessPoint))), //
 //				new CtlCommand(
@@ -109,8 +128,5 @@ public class TrustListManager {
 				ctlCommands);
 	}
 
-	public void setRootCaCertificate(EtsiTs103097Certificate rootCaCertificate) {
-		this.rootCaCertificate = rootCaCertificate;
-	}
 
 }

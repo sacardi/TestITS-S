@@ -65,10 +65,9 @@ public class PKIEntities {
 		this.authorizationCA.setAuthorizationCaChain(this.rootCA.getAuthorizationCaChain());
 	}
 
-	private void createTrustListManager(){
-		this.trustListManager = new TrustListManager();
+	private void createTrustListManager() {
+		this.trustListManager = new TrustListManager(this.rootCA.getRootCaCertificate(), this.rootCA.getRootCaCertificateHashedId8());
 
-		this.trustListManager.setRootCaCertificate(this.rootCA.getRootCaCertificate());
 	}
 
 	// called only by PlainPkiNoHttp

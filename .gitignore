@@ -2,3 +2,5 @@ TestITS-S/CTL_confronto
 TestITS-S/CTL_prove
 *.etsi
 *.zip
+TestITS-S/.settings/org.eclipse.core.resources.prefs
+TestITS-S/escrypt.lnk
