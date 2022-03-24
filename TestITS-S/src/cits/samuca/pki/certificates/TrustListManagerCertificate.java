@@ -132,8 +132,9 @@ public class TrustListManagerCertificate {
 
 		final String tlmName = "tlm.autostrade.it";
 
-		final int assuranceLevel = 3;
-		final int confidenceLevel = 2;
+		// not required
+//		final int assuranceLevel = 3;
+//		final int confidenceLevel = 2;
 //		final SubjectAssurance subjectAssurance = new SubjectAssurance(assuranceLevel, confidenceLevel);
 		final SubjectAssurance subjectAssurance = null;
 
@@ -166,11 +167,8 @@ public class TrustListManagerCertificate {
 		PsidSsp[] appPermissions = null;
 
 		try {
-			appPermissions = new PsidSsp[] {
-//						new PsidSsp(new Psid(622),
-//								new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("01"))),
-					new PsidSsp(new Psid(624), new ServiceSpecificPermissions(
-							ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("01C8"))) };
+			appPermissions = new PsidSsp[] { new PsidSsp(new Psid(624),
+					new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("01C8"))) };
 
 		} catch (IOException e) {
 			e.printStackTrace();

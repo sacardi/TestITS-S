@@ -85,7 +85,7 @@ public class RootCa {
 		final Url itsAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/itss/dummy");
 		final Url eaAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/enrolmentCA/");
 		final Url aaAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/authorizationCA");
-		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/dummy");
+		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/DC");
 
 		final HashedId8 rootCaEncodedCertificate = this.rootCaCertificate.getCertificateHashedId8();
 		HashedId8[] digestsOfTrustedCertificates = { rootCaEncodedCertificate };

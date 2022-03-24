@@ -55,13 +55,29 @@ public class TrustListManager {
 
 	public TrustListManager(EtsiTs103097Certificate rootCaCertificate, HashedId8 rootCaCertificateHashedId8) {
 
+		setRootCaInformation(rootCaCertificate, rootCaCertificateHashedId8);
+
+		createTrustListManagerCertificate();
+
+		createEuropeanCertificateTrustList();
+	}
+
+	private void setRootCaInformation(EtsiTs103097Certificate rootCaCertificate, HashedId8 rootCaCertificateHashedId8) {
 		this.rootCaCertificate = rootCaCertificate;
 		this.rootCaCertificateHashedId8 = rootCaCertificateHashedId8;
+	}
 
+	private void createTrustListManagerCertificate() {
 		this.trustListManagerCertificate = new TrustListManagerCertificate();
+	}
 
-		ToBeSignedTlmCtl toBeSignedEctl = generateEctlRequest();
+	private void createEuropeanCertificateTrustList() {
+		ToBeSignedTlmCtl toBeSignedEctl = generateInnerEctlRequest();
 
+		signEctl(toBeSignedEctl);
+	}
+
+	private void signEctl(ToBeSignedTlmCtl toBeSignedEctl) {
 		final Time64 signingGenerationTime = new Time64(new Date());
 
 		final EtsiTs103097Certificate[] signerCertificateChain = new EtsiTs103097Certificate[] {
@@ -69,20 +85,17 @@ public class TrustListManager {
 
 		final PrivateKey signerPrivateKey = this.trustListManagerCertificate.getSigningKeys().getPrivate();
 
-//		final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
-//				.getMessagesCaGenerator();
-		
-		setCaMessagesGenerator();
+		setMessagesCaGenerator();
 
-		EtsiTs103097DataSigned europeanCertificateTrustList = createEuropeanCertificateTrustList(toBeSignedEctl,
-				signingGenerationTime, signerCertificateChain, signerPrivateKey, messagesCaGenerator);
+		EtsiTs103097DataSigned europeanCertificateTrustList = signEctl_exitOnProblems(toBeSignedEctl,
+				signingGenerationTime, signerCertificateChain, signerPrivateKey, this.messagesCaGenerator);
 
 		IOUtils.writeCtlToFile(europeanCertificateTrustList, Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
 		IOUtils.writeCtlToFile(europeanCertificateTrustList, Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE_FOR_COHDA);
 		Logger.shortPrint("[root CA         ] ECTL written to file");
 	}
 
-	private EtsiTs103097DataSigned createEuropeanCertificateTrustList(ToBeSignedTlmCtl toBeSignedEctl,
+	private EtsiTs103097DataSigned signEctl_exitOnProblems(ToBeSignedTlmCtl toBeSignedEctl,
 			final Time64 signingGenerationTime, final EtsiTs103097Certificate[] signerCertificateChain,
 			final PrivateKey signerPrivateKey, final ETSITS102941MessagesCaGenerator messagesCaGenerator) {
 		EtsiTs103097DataSigned certificateTrustListMessage = null;
@@ -92,7 +105,8 @@ public class TrustListManager {
 					signingGenerationTime, //
 					toBeSignedEctl, //
 					signerCertificateChain, //
-					signerPrivateKey);
+					signerPrivateKey//
+			);
 
 		} catch (SignatureException | IOException e) {
 			e.printStackTrace();
@@ -101,38 +115,26 @@ public class TrustListManager {
 		return certificateTrustListMessage;
 	}
 
-	private ToBeSignedTlmCtl generateEctlRequest() {
+	private ToBeSignedTlmCtl generateInnerEctlRequest() {
 		final Version version = Version.V1;
 		final Time32 nextUpdate = GenericCreationUtils.createNextUpdateThisDateInTheFuture("20250910 14:14:14");
 		final boolean isFullCtl = true;
 		final int ctlSequence = 0;
 
-//		final Url itsAccessPoint = new Url("http://localhost:8080/samuCA/itss/dummy");
-//		final Url eaAccessPoint = new Url("http://localhost:8080/samuCA/enrolmentCA/");
-//		final Url aaAccessPoint = new Url("http://localhost:8080/samuCA/authorizationCA");
-//		final Url dcAccessPoint = new Url("http://localhost:8080/samuCA/dummy");
-
 		final Url CpocAccessPoint = GenericCreationUtils
-				.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/CPOC/dummy");
-//
-//		HashedId8[] certificateDigests = { new HashedId8(this.rootCaCertificate.getCertificate().getEncoded()) };
+				.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/CPOC/");
 
-		final Url dcAccessPoint = GenericCreationUtils
-				.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/dummy");
-		final HashedId8 rootCaEncodedCertificate = this.rootCaCertificateHashedId8;
-		HashedId8[] digestsOfTrustedCertificates = { rootCaEncodedCertificate };
+		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/DC");
 
+		HashedId8[] digestsOfTrustedCertificates = { this.rootCaCertificateHashedId8 };
+
+		RootCaEntry rootCaEntry = new RootCaEntry(this.rootCaCertificate, null);
+		DcEntry dcEntry = new DcEntry(dcAccessPoint, new SequenceOfHashedId8(digestsOfTrustedCertificates));
+		TlmEntry tlmEntry = new TlmEntry(this.trustListManagerCertificate.getCertificate(), null, CpocAccessPoint);
 		final CtlCommand[] ctlCommands = new CtlCommand[] { //
-				new CtlCommand(new CtlEntry(new RootCaEntry(this.rootCaCertificate, null))), //
-				new CtlCommand(new CtlEntry(
-						new DcEntry(dcAccessPoint, new SequenceOfHashedId8(digestsOfTrustedCertificates)))), //
-				new CtlCommand(new CtlEntry(
-						new TlmEntry(this.trustListManagerCertificate.getCertificate(), null, CpocAccessPoint))), //
-//				new CtlCommand(new CtlEntry(
-//						new EaEntry(this.enrolmentCaCertificate.getCertificate(), eaAccessPoint, itsAccessPoint))), //
-//				new CtlCommand(
-//						new CtlEntry(new AaEntry(this.authorizationCaCertificate.getCertificate(), aaAccessPoint))), //
-//				new CtlCommand(new CtlEntry(new DcEntry(dcAccessPoint, new SequenceOfHashedId8(certificateDigests)))), //
+				new CtlCommand(new CtlEntry(rootCaEntry)), //
+				new CtlCommand(new CtlEntry(dcEntry)), //
+				new CtlCommand(new CtlEntry(tlmEntry)), //
 		};
 
 		return new ToBeSignedTlmCtl( //
@@ -143,8 +145,8 @@ public class TrustListManager {
 				ctlCommands);
 	}
 
-	private void setCaMessagesGenerator() {
-		
+	private void setMessagesCaGenerator() {
+
 		setCryptoManager();
 
 		int versionToGenerate = Ieee1609Dot2Data.DEFAULT_VERSION;
