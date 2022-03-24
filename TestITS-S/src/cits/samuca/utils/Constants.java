@@ -38,7 +38,7 @@ public class Constants {
 
 	public static final String SENDING_ITSS_ENROLMENT_REQUEST_MESSAGE = "sending_itss_enrolment_request_message.coer";
 
-	public static final boolean READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM = false;
+	public static final boolean READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM = true;
 
-	public static final String IP_ADDRESS = "192.168.1.104";
+	public static final String IP_ADDRESS = "172.20.113.124";
 }

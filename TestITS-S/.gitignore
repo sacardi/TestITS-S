@@ -8,3 +8,5 @@ build
 
 *.coer
 /target/
+
+*.lnk

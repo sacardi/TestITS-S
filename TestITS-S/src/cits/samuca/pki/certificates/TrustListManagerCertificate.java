@@ -102,7 +102,7 @@ public class TrustListManagerCertificate {
 	private void createSigningKeys() {
 		DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
 
-		this.signingKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
+		this.signingKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaBrainpoolP256r1Signature);
 
 		IOUtils.writePrivateKeyToFile(this.signingKeys.getPrivate(), Constants.TLM_SIGNING_KEYS_PRIVATE_KEY_FILE);
 
@@ -112,7 +112,7 @@ public class TrustListManagerCertificate {
 	private void createEncryptionKeys() {
 		DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
 
-		this.encryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaNistP256Signature);
+		this.encryptionKeys = cryptoManager.generateKeyPair(SignatureChoices.ecdsaBrainpoolP256r1Signature);
 
 		IOUtils.writePrivateKeyToFile(this.encryptionKeys.getPrivate(), Constants.TLM_ENCRYPTION_KEYS_PRIVATE_KEY_FILE);
 
@@ -134,7 +134,8 @@ public class TrustListManagerCertificate {
 
 		final int assuranceLevel = 3;
 		final int confidenceLevel = 2;
-		final SubjectAssurance subjectAssurance = new SubjectAssurance(assuranceLevel, confidenceLevel);
+//		final SubjectAssurance subjectAssurance = new SubjectAssurance(assuranceLevel, confidenceLevel);
+		final SubjectAssurance subjectAssurance = null;
 
 		final Hostname hostNameFromString = createHostNameFromString(tlmName);
 		final CertificateId certificateId = new CertificateId(hostNameFromString);
@@ -169,7 +170,7 @@ public class TrustListManagerCertificate {
 //						new PsidSsp(new Psid(622),
 //								new ServiceSpecificPermissions(ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("01"))),
 					new PsidSsp(new Psid(624), new ServiceSpecificPermissions(
-							ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("0138"))) };
+							ServiceSpecificPermissionsChoices.bitmapSsp, Hex.decode("01C8"))) };
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -191,9 +192,9 @@ public class TrustListManagerCertificate {
 					geographicRegion, //
 					subjectAssurance, //
 					appPermissions, //
-					SignatureChoices.ecdsaNistP256Signature, // signingPublicKeyAlgorithm
+					SignatureChoices.ecdsaBrainpoolP256r1Signature, // signingPublicKeyAlgorithm
 					this.signingKeys.getPublic(), // signPublicKey
-					this.encryptionKeys.getPrivate() // signPrivateKey
+					this.signingKeys.getPrivate() // signPrivateKey
 			);
 
 		} catch (IllegalArgumentException | SignatureException | IOException e) {

@@ -90,12 +90,6 @@ public class RootCaCertificate {
 //		System.out.println(threeDaysBeforeNow);
 //		System.out.println(rootCaValidityPeriod);
 
-		int minChainDepth1 = 2;
-		int chainDepthRange1 = 0;
-
-		int minChainDepth2 = 1;
-		int chainDepthRange2 = 0;
-
 //		byte[] serviceSpecificPermissions_canSignCtlWith_EA_AA_DC_entries = Hex.decode("0138");
 
 		SignatureChoices signingPublicKeyAlgorithm = SignatureChoices.ecdsaNistP256Signature;
@@ -134,11 +128,20 @@ public class RootCaCertificate {
 
 		final CertificateId certificateId = new CertificateId(rootCaHostname);
 
+		int minChainDepth1 = 2;
+		int chainDepthRange1 = 0;
+
+		int minChainDepth2 = 1;
+		int chainDepthRange2 = 0;
+
 		final boolean appBoolean1 = true;
 		final boolean enrollBoolean1 = true;
 
 		final boolean appBoolean2 = true;
 		final boolean enrollBoolean2 = false;
+
+		EndEntityType eeType1 = new EndEntityType(appBoolean1, enrollBoolean1);
+		EndEntityType eeType2 = new EndEntityType(appBoolean2, enrollBoolean2);
 
 		final PsidSsp[] appPermissions = createAppPermissions();
 
@@ -186,14 +189,17 @@ public class RootCaCertificate {
 						new SequenceOfPsidSspRange(new PsidSspRange[] { //
 								psidSspRange36, //
 								psidSspRange37, //
-								psidSspRange137, //
-								psidSspRange138, //
+//								psidSspRange137, //
+//								psidSspRange138, //
 								psidSspRange139, //
-								psidSspRange140, //
+//								psidSspRange140, //
 								psidSspRange141, //
 								psidSspRange623 //
 						})), //
-				minChainDepth1, chainDepthRange1, new EndEntityType(appBoolean1, enrollBoolean1));
+				minChainDepth1, // minChainDepth1
+				null, // chainDepthRange1
+				eeType1// eeType1
+		);
 
 		PsidSspRange sixthPsidSspRange = new PsidSspRange(new Psid(623), new SspRange(SspRangeChoices.bitmapSspRange,
 				new BitmapSspRange(Hex.decode("013E"), Hex.decode("FFC1"))));
@@ -203,7 +209,10 @@ public class RootCaCertificate {
 						new SequenceOfPsidSspRange(new PsidSspRange[] { //
 								sixthPsidSspRange //
 						})), //
-				minChainDepth2, chainDepthRange2, new EndEntityType(appBoolean2, enrollBoolean2));
+				null, // minChainDepth2
+				null, // chainDepthRange2
+				null // eeType2
+		);
 
 		final PsidGroupPermissions[] certIssuePermissions = new PsidGroupPermissions[] { //
 				firstPsidGroupPermissions, //
