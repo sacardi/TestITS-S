@@ -16,6 +16,15 @@ import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.securedd
 
 public class IOUtils {
 
+	public static EtsiTs103097DataSigned readCtlFromFile(String filename) {
+
+		Logger.shortPrint("[I/O utils       ] reading CTL from " + filename);
+
+		EtsiTs103097DataSigned certificateTrustListMessage = readEtsiTs103097DataSignedFromFile_exitOnProblems(filename);
+
+		return certificateTrustListMessage;
+	}
+
 	public static void writeCtlToFile(EtsiTs103097DataSigned certificateTrustListMessage, String filename) {
 
 		Logger.shortPrint("[I/O utils       ] writing CTL to " + filename);
@@ -29,20 +38,48 @@ public class IOUtils {
 
 		writeEtsiTs103097DataSignedToFile_exitOnProblems(certificateRevocationListMessage, filename);
 	}
-	
+
+	private static EtsiTs103097DataSigned readEtsiTs103097DataSignedFromFile_exitOnProblems(String filename) {
+
+		EtsiTs103097DataSigned certificateTrustListMessage = null;
+		try {
+			certificateTrustListMessage = readEtsiTs103097DataSignedFromFile(filename);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		return certificateTrustListMessage;
+	}
+
 	private static void writeEtsiTs103097DataSignedToFile_exitOnProblems(
 			EtsiTs103097DataSigned certificateTrustListMessage, String filename) {
-		
+
 		try {
 			writeEtsiTs103097DataSignedToFile(certificateTrustListMessage, filename);
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 	}
 
-	private static void writeEtsiTs103097DataSignedToFile(EtsiTs103097DataSigned fileToDump, String filename) throws IOException {
+	private static EtsiTs103097DataSigned readEtsiTs103097DataSignedFromFile(String filename) throws IOException {
+
+		DataInputStream dataInputStream = new DataInputStream(new FileInputStream(filename));
+
+		EtsiTs103097DataSigned fileToRead = null;
+
+		fileToRead.decode(dataInputStream);
+
+		dataInputStream.close();
+
+		return fileToRead;
+	}
+
+	private static void writeEtsiTs103097DataSignedToFile(EtsiTs103097DataSigned fileToDump, String filename)
+			throws IOException {
 
 		DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(filename));
 
@@ -128,11 +165,11 @@ public class IOUtils {
 
 	private static void writeObjectToFile(Object object, String filename) throws FileNotFoundException, IOException {
 		FileOutputStream fileOutputStream = new FileOutputStream(filename);
-		
+
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-		
+
 		objectOutputStream.writeObject(object);
-		
+
 		objectOutputStream.close();
 	}
 

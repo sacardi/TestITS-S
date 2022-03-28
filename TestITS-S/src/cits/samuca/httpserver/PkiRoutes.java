@@ -13,6 +13,7 @@ import org.certificateservices.custom.c2x.etsits102941.v131.DecryptionFailedExce
 import org.certificateservices.custom.c2x.etsits102941.v131.InternalErrorException;
 import org.certificateservices.custom.c2x.etsits102941.v131.MessageParsingException;
 import org.certificateservices.custom.c2x.etsits102941.v131.SignatureVerificationException;
+import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.secureddata.EtsiTs103097DataSigned;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 
 import akka.actor.typed.ActorSystem;
@@ -29,6 +30,9 @@ import akka.http.javadsl.server.PathMatchers;
 import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
 import cits.samuca.pki.PKIEntities;
+import cits.samuca.utils.Constants;
+import cits.samuca.utils.IOUtils;
+import cits.samuca.utils.PkiUtilsSingleton;
 import scala.concurrent.duration.FiniteDuration;
 
 import static akka.http.javadsl.server.Directives.*;
@@ -65,7 +69,8 @@ public class PkiRoutes {
 			Route rootCaRoutes = createRoutesForRootCa();
 			Route enrolmentCaRoutes = createRoutesForEnrolmentCa();
 			Route authorizationCaRoutes = createRoutesForAuthorizationCa();
-			return concat(rootCaRoutes, enrolmentCaRoutes, authorizationCaRoutes);
+			Route distributionCenterRoutes = createRoutesForDistributionCenter();
+			return concat(rootCaRoutes, enrolmentCaRoutes, authorizationCaRoutes, distributionCenterRoutes);
 		});
 	}
 
@@ -198,6 +203,85 @@ public class PkiRoutes {
 				() -> concat(atRequest, atRequestWithPop));
 
 		return authorizationCA;
+	}
+
+	private Route createRoutesForDistributionCenter() {
+
+		final MediaType.WithFixedCharset applicationCustom = MediaTypes.customWithFixedCharset("application",
+				"x-its-response", // The new Media Type name
+				HttpCharsets.UTF_8, // The charset used
+				new HashMap<>(), // Empty parameters
+				false); // No arbitrary subtypes are allowed
+
+		ContentType customContentType = applicationCustom.toContentType();
+
+		byte[] ba1 = new byte[1];
+
+		final FiniteDuration threeSecondsTimeout = createThreeSecondsTimeout();
+
+		Route getCtl = get(() -> path(PathMatchers.segment("getctl"),
+
+				() -> {
+					System.out.println("getCTL");
+					
+					EtsiTs103097DataSigned ctl = IOUtils.readCtlFromFile(Constants.CERTIFICATE_TRUST_LIST_FILE);
+					
+					byte[] encodedCtl = null;
+					try {
+						encodedCtl = ctl.getEncoded();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						System.exit(1);
+					}
+					
+					return complete(StatusCodes.OK,
+							HttpEntities.create(customContentType, encodedCtl));
+				}
+				
+//				() -> extractStrictEntity(threeSecondsTimeout, entity -> {
+//					String contentType = entity.getContentType().toString();
+//					if (contentTypeMatchesXitsRequest(contentType)) {
+//						byte[] requestBody = extractBinaryBodyFromRequest(entity);
+//						Ieee1609Dot2Data enrolmentRequestMessage = null;
+//
+//						try {
+//							enrolmentRequestMessage = new Ieee1609Dot2Data(requestBody);
+//
+//							writeEnrolmentRequestMessageToFile(enrolmentRequestMessage);
+//
+//							byte[] enrolmentResponseMessage = pkiEntities
+//									.getEnrolmentResponseFromEnrolmentCa(requestBody);
+//
+//							return complete(StatusCodes.OK,
+//									HttpEntities.create(customContentType, enrolmentResponseMessage));
+//						} catch (IOException | MessageParsingException | SignatureVerificationException
+//								| DecryptionFailedException | InternalErrorException | GeneralSecurityException e1) {
+//
+//							System.out.println("exception: " + e1);
+//							e1.printStackTrace();
+//						}
+//
+//						System.out.println("quiquiquiquqiququiqui");
+//						return complete(StatusCodes.OK, HttpEntities.create(customContentType, ba1));
+//					}
+//
+//					return complete(StatusCodes.BAD_REQUEST);
+//				})//
+				));
+
+		Route todo = post(() -> path(PathMatchers.segment("ATRequest"), () -> extractRequestEntity(entity -> {
+			String contentType = entity.getContentType().toString();
+			System.out.println(contentType);
+			if (contentTypeMatchesXitsRequest(contentType)) {
+				return complete(StatusCodes.OK);
+			}
+			return complete(StatusCodes.BAD_REQUEST);
+		})));
+
+		Route distributionCenter = pathPrefix(PathMatchers.segment("DC"), () -> concat(getCtl, todo));
+
+		return distributionCenter;
 	}
 
 	private ExceptionHandler getExceptionHandler() {
