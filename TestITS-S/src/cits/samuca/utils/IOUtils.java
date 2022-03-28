@@ -16,7 +16,7 @@ import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.securedd
 
 public class IOUtils {
 
-	public static EtsiTs103097DataSigned readTlmFromFile(String filename) {
+	public static EtsiTs103097DataSigned readCtlFromFile(String filename) {
 
 		Logger.shortPrint("[I/O utils       ] reading CTL from " + filename);
 
@@ -80,7 +80,7 @@ public class IOUtils {
 
 		DataInputStream dataInputStream = new DataInputStream(new FileInputStream(filename));
 
-		EtsiTs103097DataSigned fileToRead = null;
+		EtsiTs103097DataSigned fileToRead = new EtsiTs103097DataSigned();
 
 		fileToRead.decode(dataInputStream);
 

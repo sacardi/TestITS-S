@@ -21,7 +21,7 @@ public class HttpServer {
 	private ActorSystem<HttpServerMessages.Message> actorSystem;
 	private PKIEntities pki;
 
-	private String address = Constants.IP_ADDRESS;
+	private String address = Constants.INTERNAL_IP_ADDRESS;
 	private Integer port = 8080;
 
 	public HttpServer(PKIEntities pki) {

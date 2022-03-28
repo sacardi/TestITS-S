@@ -235,7 +235,7 @@ public class PkiRoutes {
 				() -> {
 					System.out.println("getCTL");
 
-					EtsiTs103097DataSigned ctl = IOUtils.readTlmFromFile(Constants.CERTIFICATE_TRUST_LIST_FILE);
+					EtsiTs103097DataSigned ctl = IOUtils.readCtlFromFile(Constants.CERTIFICATE_TRUST_LIST_FILE);
 
 					byte[] encodedCtl = null;
 					try {
@@ -296,7 +296,7 @@ public class PkiRoutes {
 				() -> {
 					System.out.println("getECTL");
 
-					EtsiTs103097DataSigned ectl = IOUtils.readTlmFromFile(Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
+					EtsiTs103097DataSigned ectl = IOUtils.readCtlFromFile(Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
 
 					byte[] encodedEctl = null;
 					try {

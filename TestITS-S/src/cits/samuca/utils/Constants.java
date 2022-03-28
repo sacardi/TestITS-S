@@ -40,5 +40,8 @@ public class Constants {
 
 	public static final boolean READ_CERTIFICATES_FROM_FILE_INSTEAD_OF_CREATING_THEM = true;
 
-	public static final String IP_ADDRESS = "172.20.113.124";
+	public static final String INTERNAL_IP_ADDRESS = "10.151.91.55";
+	public static final String EXTERNAL_IP_ADDRESS = "https://servizitest.autostrade.it:4450/samuCA/";
+	
+		
 }

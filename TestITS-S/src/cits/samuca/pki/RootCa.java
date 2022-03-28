@@ -81,11 +81,10 @@ public class RootCa {
 		final boolean isFullCtl = true;
 		final int ctlSequence = 0;
 
-
-		final Url itsAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/itss/dummy");
-		final Url eaAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/enrolmentCA/");
-		final Url aaAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/authorizationCA");
-		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/DC");
+		final Url itsAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "itss/dummy");
+		final Url eaAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "enrolmentCA/");
+		final Url aaAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "authorizationCA");
+		final Url dcAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "DC");
 
 		final HashedId8 rootCaEncodedCertificate = this.rootCaCertificate.getCertificateHashedId8();
 		HashedId8[] digestsOfTrustedCertificates = { rootCaEncodedCertificate };
@@ -221,7 +220,7 @@ public class RootCa {
 	public EtsiTs103097Certificate getRootCaCertificate() {
 		return this.rootCaCertificate.getCertificate();
 	}
-	
+
 	public HashedId8 getRootCaCertificateHashedId8() {
 		return this.rootCaCertificate.getCertificateHashedId8();
 	}

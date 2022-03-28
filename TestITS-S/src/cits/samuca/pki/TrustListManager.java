@@ -122,9 +122,9 @@ public class TrustListManager {
 		final int ctlSequence = 0;
 
 		final Url CpocAccessPoint = GenericCreationUtils
-				.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/CPOC/");
+				.createUrl("http://" + Constants.INTERNAL_IP_ADDRESS + ":8080/samuCA/CPOC/");
 
-		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.IP_ADDRESS + ":8080/samuCA/DC");
+		final Url dcAccessPoint = GenericCreationUtils.createUrl("http://" + Constants.INTERNAL_IP_ADDRESS + ":8080/samuCA/DC");
 
 		HashedId8[] digestsOfTrustedCertificates = { this.rootCaCertificateHashedId8 };
 
