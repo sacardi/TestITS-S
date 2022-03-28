@@ -20,9 +20,20 @@ public class IOUtils {
 
 		Logger.shortPrint("[I/O utils       ] reading CTL from " + filename);
 
-		EtsiTs103097DataSigned certificateTrustListMessage = readEtsiTs103097DataSignedFromFile_exitOnProblems(filename);
+		EtsiTs103097DataSigned certificateTrustListMessage = readEtsiTs103097DataSignedFromFile_exitOnProblems(
+				filename);
 
 		return certificateTrustListMessage;
+	}
+
+	public static EtsiTs103097DataSigned readCrlFromFile(String filename) {
+
+		Logger.shortPrint("[I/O utils       ] reading CRL from " + filename);
+
+		EtsiTs103097DataSigned certificateRevocationListMessage = readEtsiTs103097DataSignedFromFile_exitOnProblems(
+				filename);
+
+		return certificateRevocationListMessage;
 	}
 
 	public static void writeCtlToFile(EtsiTs103097DataSigned certificateTrustListMessage, String filename) {

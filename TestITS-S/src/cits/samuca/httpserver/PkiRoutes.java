@@ -223,9 +223,9 @@ public class PkiRoutes {
 
 				() -> {
 					System.out.println("getCTL");
-					
+
 					EtsiTs103097DataSigned ctl = IOUtils.readCtlFromFile(Constants.CERTIFICATE_TRUST_LIST_FILE);
-					
+
 					byte[] encodedCtl = null;
 					try {
 						encodedCtl = ctl.getEncoded();
@@ -234,41 +234,28 @@ public class PkiRoutes {
 						e.printStackTrace();
 						System.exit(1);
 					}
-					
-					return complete(StatusCodes.OK,
-							HttpEntities.create(customContentType, encodedCtl));
-				}
-				
-//				() -> extractStrictEntity(threeSecondsTimeout, entity -> {
-//					String contentType = entity.getContentType().toString();
-//					if (contentTypeMatchesXitsRequest(contentType)) {
-//						byte[] requestBody = extractBinaryBodyFromRequest(entity);
-//						Ieee1609Dot2Data enrolmentRequestMessage = null;
-//
-//						try {
-//							enrolmentRequestMessage = new Ieee1609Dot2Data(requestBody);
-//
-//							writeEnrolmentRequestMessageToFile(enrolmentRequestMessage);
-//
-//							byte[] enrolmentResponseMessage = pkiEntities
-//									.getEnrolmentResponseFromEnrolmentCa(requestBody);
-//
-//							return complete(StatusCodes.OK,
-//									HttpEntities.create(customContentType, enrolmentResponseMessage));
-//						} catch (IOException | MessageParsingException | SignatureVerificationException
-//								| DecryptionFailedException | InternalErrorException | GeneralSecurityException e1) {
-//
-//							System.out.println("exception: " + e1);
-//							e1.printStackTrace();
-//						}
-//
-//						System.out.println("quiquiquiquqiququiqui");
-//						return complete(StatusCodes.OK, HttpEntities.create(customContentType, ba1));
-//					}
-//
-//					return complete(StatusCodes.BAD_REQUEST);
-//				})//
-				));
+
+					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedCtl));
+				}));
+		
+		Route getCrl = get(() -> path(PathMatchers.segment("getcrl"),
+
+				() -> {
+					System.out.println("getCRL");
+
+					EtsiTs103097DataSigned crl = IOUtils.readCrlFromFile(Constants.CERTIFICATE_REVOCATION_LIST_FILE);
+
+					byte[] encodedCrl = null;
+					try {
+						encodedCrl = crl.getEncoded();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						System.exit(1);
+					}
+
+					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedCrl));
+				}));
 
 		Route todo = post(() -> path(PathMatchers.segment("ATRequest"), () -> extractRequestEntity(entity -> {
 			String contentType = entity.getContentType().toString();
