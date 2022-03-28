@@ -207,17 +207,25 @@ public class PkiRoutes {
 
 	private Route createRoutesForDistributionCenter() {
 
+		Route getCtl = createRouteForCtl();
+
+		Route getCrl = createRouteForCrl();
+
+		Route getEctl = createRouteForEctl();
+
+		Route distributionCenter = pathPrefix(PathMatchers.segment("DC"), () -> concat(getCtl, getCrl, getEctl));
+
+		return distributionCenter;
+	}
+
+	private Route createRouteForCtl() {
 		final MediaType.WithFixedCharset applicationCustom = MediaTypes.customWithFixedCharset("application",
-				"x-its-response", // The new Media Type name
+				"x-its-ctl", // The new Media Type name
 				HttpCharsets.UTF_8, // The charset used
 				new HashMap<>(), // Empty parameters
 				false); // No arbitrary subtypes are allowed
 
 		ContentType customContentType = applicationCustom.toContentType();
-
-		byte[] ba1 = new byte[1];
-
-		final FiniteDuration threeSecondsTimeout = createThreeSecondsTimeout();
 
 		Route getCtl = get(() -> path(PathMatchers.segment("getctl"),
 
@@ -237,7 +245,19 @@ public class PkiRoutes {
 
 					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedCtl));
 				}));
-		
+
+		return getCtl;
+	}
+
+	private Route createRouteForCrl() {
+		final MediaType.WithFixedCharset applicationCustom = MediaTypes.customWithFixedCharset("application",
+				"x-its-crl", // The new Media Type name
+				HttpCharsets.UTF_8, // The charset used
+				new HashMap<>(), // Empty parameters
+				false); // No arbitrary subtypes are allowed
+
+		ContentType customContentType = applicationCustom.toContentType();
+
 		Route getCrl = get(() -> path(PathMatchers.segment("getcrl"),
 
 				() -> {
@@ -256,19 +276,37 @@ public class PkiRoutes {
 
 					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedCrl));
 				}));
+		return getCrl;
+	}
 
-		Route todo = post(() -> path(PathMatchers.segment("ATRequest"), () -> extractRequestEntity(entity -> {
-			String contentType = entity.getContentType().toString();
-			System.out.println(contentType);
-			if (contentTypeMatchesXitsRequest(contentType)) {
-				return complete(StatusCodes.OK);
-			}
-			return complete(StatusCodes.BAD_REQUEST);
-		})));
+	private Route createRouteForEctl() {
+		final MediaType.WithFixedCharset applicationCustom = MediaTypes.customWithFixedCharset("application",
+				"x-its-ectl", // The new Media Type name
+				HttpCharsets.UTF_8, // The charset used
+				new HashMap<>(), // Empty parameters
+				false); // No arbitrary subtypes are allowed
 
-		Route distributionCenter = pathPrefix(PathMatchers.segment("DC"), () -> concat(getCtl, todo));
+		ContentType customContentType = applicationCustom.toContentType();
 
-		return distributionCenter;
+		Route getCrl = get(() -> path(PathMatchers.segment("getectl"),
+
+				() -> {
+					System.out.println("getECTL");
+
+					EtsiTs103097DataSigned ectl = IOUtils.readCtlFromFile(Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
+
+					byte[] encodedEctl = null;
+					try {
+						encodedEctl = ectl.getEncoded();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						System.exit(1);
+					}
+
+					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedEctl));
+				}));
+		return getCrl;
 	}
 
 	private ExceptionHandler getExceptionHandler() {
