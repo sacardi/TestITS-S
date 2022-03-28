@@ -13,6 +13,7 @@ import org.certificateservices.custom.c2x.etsits102941.v131.DecryptionFailedExce
 import org.certificateservices.custom.c2x.etsits102941.v131.InternalErrorException;
 import org.certificateservices.custom.c2x.etsits102941.v131.MessageParsingException;
 import org.certificateservices.custom.c2x.etsits102941.v131.SignatureVerificationException;
+import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.secureddata.EtsiTs103097DataSigned;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.secureddata.Ieee1609Dot2Data;
 
@@ -213,7 +214,9 @@ public class PkiRoutes {
 
 		Route getEctl = createRouteForEctl();
 
-		Route distributionCenter = pathPrefix(PathMatchers.segment("DC"), () -> concat(getCtl, getCrl, getEctl));
+		Route getTlm = createRouteForTlm();
+
+		Route distributionCenter = pathPrefix(PathMatchers.segment("DC"), () -> concat(getCtl, getCrl, getEctl, getTlm));
 
 		return distributionCenter;
 	}
@@ -232,7 +235,7 @@ public class PkiRoutes {
 				() -> {
 					System.out.println("getCTL");
 
-					EtsiTs103097DataSigned ctl = IOUtils.readCtlFromFile(Constants.CERTIFICATE_TRUST_LIST_FILE);
+					EtsiTs103097DataSigned ctl = IOUtils.readTlmFromFile(Constants.CERTIFICATE_TRUST_LIST_FILE);
 
 					byte[] encodedCtl = null;
 					try {
@@ -293,7 +296,7 @@ public class PkiRoutes {
 				() -> {
 					System.out.println("getECTL");
 
-					EtsiTs103097DataSigned ectl = IOUtils.readCtlFromFile(Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
+					EtsiTs103097DataSigned ectl = IOUtils.readTlmFromFile(Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
 
 					byte[] encodedEctl = null;
 					try {
@@ -308,6 +311,37 @@ public class PkiRoutes {
 				}));
 		return getCrl;
 	}
+
+	private Route createRouteForTlm() {
+		final MediaType.WithFixedCharset applicationCustom = MediaTypes.customWithFixedCharset("application",
+				"x-its-tlm", // The new Media Type name
+				HttpCharsets.UTF_8, // The charset used
+				new HashMap<>(), // Empty parameters
+				false); // No arbitrary subtypes are allowed
+
+		ContentType customContentType = applicationCustom.toContentType();
+
+		Route getTlm = get(() -> path(PathMatchers.segment("gettlm"),
+
+				() -> {
+					System.out.println("getTlm");
+
+					EtsiTs103097Certificate ectl = IOUtils.readCertificateFromFile(Constants.TLM_CERTIFICATE_FILE);
+
+					byte[] encodedTlm = null;
+					try {
+						encodedTlm = ectl.getEncoded();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						System.exit(1);
+					}
+
+					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedTlm));
+				}));
+		return getTlm;
+	}
+	
 
 	private ExceptionHandler getExceptionHandler() {
 		return ExceptionHandler.newBuilder().matchAny(x -> {

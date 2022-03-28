@@ -16,7 +16,7 @@ import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.securedd
 
 public class IOUtils {
 
-	public static EtsiTs103097DataSigned readCtlFromFile(String filename) {
+	public static EtsiTs103097DataSigned readTlmFromFile(String filename) {
 
 		Logger.shortPrint("[I/O utils       ] reading CTL from " + filename);
 
