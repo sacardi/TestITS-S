@@ -107,7 +107,7 @@ public class RootCa {
 		final boolean isFullCtl = true;
 		final int ctlSequence = 0;
 
-		final Url itsAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "itss/dummy");
+		final Url itsAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "enrolmentCA/enrolment");
 		final Url eaAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "enrolmentCA/");
 		final Url aaAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "authorizationCA");
 		final Url dcAccessPoint = GenericCreationUtils.createUrl(Constants.EXTERNAL_IP_ADDRESS + "DC");
