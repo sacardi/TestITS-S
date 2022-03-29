@@ -42,5 +42,6 @@ public class Constants {
 
 	public static final String INTERNAL_IP_ADDRESS = "10.151.91.55";
 	public static final String EXTERNAL_IP_ADDRESS = "https://servizitest.autostrade.it:4450/samuCA/";
+//	public static final String EXTERNAL_IP_ADDRESS = "10.151.91.55:8080/samuCA/";
 
 }

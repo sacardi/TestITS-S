@@ -237,7 +237,9 @@ public class PkiRoutes {
 			System.exit(1);
 		}
 
-		Route getCtl = get(() -> path(PathMatchers.segment("getctl"),
+		System.out.println(Globals.ROOT_CA_HASHEDID8);
+
+		Route getCtl = get(() -> pathPrefix(PathMatchers.segment("getctl"),
 
 				() -> path(PathMatchers.segment(Globals.ROOT_CA_HASHEDID8), () -> {
 					System.out.println("getCTL");
@@ -268,9 +270,9 @@ public class PkiRoutes {
 
 		ContentType customContentType = applicationCustom.toContentType();
 
-		Route getCrl = get(() -> path(PathMatchers.segment("getcrl"),
+		Route getCrl = get(() -> pathPrefix(PathMatchers.segment("getcrl"),
 
-				() -> {
+				() -> path(PathMatchers.segment(Globals.ROOT_CA_HASHEDID8), () -> {
 					System.out.println("getCRL");
 
 					EtsiTs103097DataSigned crl = IOUtils.readCrlFromFile(Constants.CERTIFICATE_REVOCATION_LIST_FILE);
@@ -285,7 +287,7 @@ public class PkiRoutes {
 					}
 
 					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedCrl));
-				}));
+				})));
 		return getCrl;
 	}
 
