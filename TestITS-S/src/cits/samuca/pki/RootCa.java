@@ -2,10 +2,13 @@ package cits.samuca.pki;
 
 import java.io.IOException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.util.Date;
 
+import org.bouncycastle.util.encoders.Hex;
+import org.certificateservices.custom.c2x.common.crypto.DefaultCryptoManager;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.basetypes.Version;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.AaEntry;
 import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlist.CrlEntry;
@@ -19,10 +22,12 @@ import org.certificateservices.custom.c2x.etsits102941.v131.datastructs.trustlis
 import org.certificateservices.custom.c2x.etsits102941.v131.generator.ETSITS102941MessagesCaGenerator;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.cert.EtsiTs103097Certificate;
 import org.certificateservices.custom.c2x.etsits103097.v131.datastructs.secureddata.EtsiTs103097DataSigned;
+import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashAlgorithm;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.HashedId8;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.SequenceOfHashedId8;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time32;
 import org.certificateservices.custom.c2x.ieee1609dot2.datastructs.basic.Time64;
+import org.certificateservices.custom.c2x.ieee1609dot2.generator.CertChainBuilder;
 
 import cits.samuca.utils.Logger;
 import cits.samuca.utils.PkiUtilsSingleton;
@@ -31,6 +36,7 @@ import cits.samuca.pki.certificates.EnrolmentCaCertificate;
 import cits.samuca.pki.certificates.RootCaCertificate;
 import cits.samuca.utils.Constants;
 import cits.samuca.utils.GenericCreationUtils;
+import cits.samuca.utils.Globals;
 import cits.samuca.utils.IOUtils;
 
 public class RootCa {
@@ -71,6 +77,26 @@ public class RootCa {
 
 		IOUtils.writeCtlToFile(certificateTrustList, Constants.CERTIFICATE_TRUST_LIST_FILE);
 		IOUtils.writeCtlToFile(certificateTrustList, Constants.CERTIFICATE_TRUST_LIST_FILE_FOR_COHDA);
+		
+		DefaultCryptoManager cryptoManager = PkiUtilsSingleton.getInstance().getCryptoManager();
+		
+		HashAlgorithm hashAlgorithm = HashAlgorithm.sha256;
+		
+		HashedId8 ctlHashedId8 = null;
+		try {
+			ctlHashedId8 = new HashedId8(cryptoManager.digest(certificateTrustList.getEncoded(),hashAlgorithm));
+		} catch (IllegalArgumentException | NoSuchAlgorithmException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		String rootCaHashedId8 = this.rootCaCertificate.getCertificateHashedId8().getHashedId8().toUpperCase();
+		
+		System.out.println("===================> " + ctlHashedId8.getHashedId8().toUpperCase());
+		System.out.println("===================> " + rootCaHashedId8);
+		System.out.println("===================> " + ctlHashedId8.toString());
+		
+		Globals.ROOT_CA_HASHEDID8 = rootCaHashedId8;
 
 		Logger.shortPrint("[root CA         ] CTL written to file");
 	}

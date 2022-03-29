@@ -32,6 +32,7 @@ import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
 import cits.samuca.pki.PKIEntities;
 import cits.samuca.utils.Constants;
+import cits.samuca.utils.Globals;
 import cits.samuca.utils.IOUtils;
 import cits.samuca.utils.PkiUtilsSingleton;
 import scala.concurrent.duration.FiniteDuration;
@@ -216,7 +217,8 @@ public class PkiRoutes {
 
 		Route getTlm = createRouteForTlm();
 
-		Route distributionCenter = pathPrefix(PathMatchers.segment("DC"), () -> concat(getCtl, getCrl, getEctl, getTlm));
+		Route distributionCenter = pathPrefix(PathMatchers.segment("DC"),
+				() -> concat(getCtl, getCrl, getEctl, getTlm));
 
 		return distributionCenter;
 	}
@@ -230,9 +232,14 @@ public class PkiRoutes {
 
 		ContentType customContentType = applicationCustom.toContentType();
 
+		if (Globals.ROOT_CA_HASHEDID8 == null) {
+			System.out.println("ERROR: ROOT_CA_HASHEDID8 is null");
+			System.exit(1);
+		}
+
 		Route getCtl = get(() -> path(PathMatchers.segment("getctl"),
 
-				() -> {
+				() -> path(PathMatchers.segment(Globals.ROOT_CA_HASHEDID8), () -> {
 					System.out.println("getCTL");
 
 					EtsiTs103097DataSigned ctl = IOUtils.readCtlFromFile(Constants.CERTIFICATE_TRUST_LIST_FILE);
@@ -247,7 +254,7 @@ public class PkiRoutes {
 					}
 
 					return complete(StatusCodes.OK, HttpEntities.create(customContentType, encodedCtl));
-				}));
+				})));
 
 		return getCtl;
 	}
@@ -296,7 +303,8 @@ public class PkiRoutes {
 				() -> {
 					System.out.println("getECTL");
 
-					EtsiTs103097DataSigned ectl = IOUtils.readCtlFromFile(Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
+					EtsiTs103097DataSigned ectl = IOUtils
+							.readCtlFromFile(Constants.EUROPEAN_CERTIFICATE_TRUST_LIST_FILE);
 
 					byte[] encodedEctl = null;
 					try {
@@ -341,7 +349,6 @@ public class PkiRoutes {
 				}));
 		return getTlm;
 	}
-	
 
 	private ExceptionHandler getExceptionHandler() {
 		return ExceptionHandler.newBuilder().matchAny(x -> {
