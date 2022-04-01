@@ -92,10 +92,6 @@ public class RootCa {
 
 		String rootCaHashedId8 = this.rootCaCertificate.getCertificateHashedId8().getHashedId8().toUpperCase();
 		
-		System.out.println("===================> " + ctlHashedId8.getHashedId8().toUpperCase());
-		System.out.println("===================> " + rootCaHashedId8);
-		System.out.println("===================> " + ctlHashedId8.toString());
-		
 		Globals.ROOT_CA_HASHEDID8 = rootCaHashedId8;
 
 		Logger.shortPrint("[root CA         ] CTL written to file");

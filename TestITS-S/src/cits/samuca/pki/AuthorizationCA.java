@@ -55,12 +55,12 @@ import cits.samuca.utils.PkiUtilsSingleton;
  * @author max
  *
  */
+
+// TODO: complete authorization ticket handling
 public class AuthorizationCA {
 
-	// these are the enrolled SITS
-	private static HashMap<String, EtsiTs103097Certificate> SendingItsStations = new HashMap<String, EtsiTs103097Certificate>();
+	private static HashMap<String, EtsiTs103097Certificate> EnrolledItsStations = new HashMap<String, EtsiTs103097Certificate>();
 
-	// Stuff that I need for the crypto.
 	private EtsiTs103097Certificate myCertificate;
 
 	private KeyPair signingKeys;
@@ -93,23 +93,10 @@ public class AuthorizationCA {
 		this.encryptionAlgorithm = BasePublicEncryptionKey.BasePublicEncryptionKeyChoices.ecdsaNistP256;
 	}
 
-	/**
-	 * This method takes an authorization request, and returns with the ticket.
-	 * 
-	 * @param authorizationMsgToSendToAuthorizationCA
-	 * @return
-	 * @throws IOException
-	 * @throws IllegalArgumentException
-	 * @throws InternalErrorException
-	 * @throws DecryptionFailedException
-	 * @throws SignatureVerificationException
-	 * @throws MessageParsingException
-	 * @throws GeneralSecurityException
-	 * @throws ParseException
-	 */
 	public byte[] authorize(byte[] authorizationMsgToSendToAuthorizationCA)
 			throws IllegalArgumentException, IOException, MessageParsingException, SignatureVerificationException,
 			DecryptionFailedException, InternalErrorException, GeneralSecurityException, ParseException {
+
 		EtsiTs103097DataEncryptedUnicast authorizationTicketRequest = new EtsiTs103097DataEncryptedUnicast(
 				authorizationMsgToSendToAuthorizationCA);
 
@@ -203,7 +190,6 @@ public class AuthorizationCA {
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
-//		Logger.debugPrint("[authorization CA] 0b) obtained certificate: " + cert);
 		Logger.shortPrint("[authorization CA] 0b) obtained certificate");
 		this.myCertificate = cert;
 	}
@@ -243,7 +229,7 @@ public class AuthorizationCA {
 	}
 
 	public static HashMap<String, EtsiTs103097Certificate> getSits() {
-		return SendingItsStations;
+		return EnrolledItsStations;
 	}
 
 	public void setAuthTicketSignKeysPublicKey(PublicKey authTicketSignKeysPublicKey) {

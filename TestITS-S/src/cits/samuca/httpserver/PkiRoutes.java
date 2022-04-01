@@ -94,8 +94,6 @@ public class PkiRoutes {
 
 		ContentType customContentType = applicationCustom.toContentType();
 
-		byte[] ba1 = new byte[1];
-
 		final FiniteDuration threeSecondsTimeout = createThreeSecondsTimeout();
 
 		Route ecRequest = post(() -> path(PathMatchers.segment("enrolment"),
@@ -122,14 +120,12 @@ public class PkiRoutes {
 							System.out.println("exception: " + e1);
 							e1.printStackTrace();
 						}
-
-						System.out.println("quiquiquiquqiququiqui");
-						return complete(StatusCodes.OK, HttpEntities.create(customContentType, ba1));
 					}
 
 					return complete(StatusCodes.BAD_REQUEST);
 				})));
 
+		// TODO: must be done
 		Route atRequest = post(() -> path(PathMatchers.segment("ATRequest"), () -> extractRequestEntity(entity -> {
 			String contentType = entity.getContentType().toString();
 			System.out.println(contentType);

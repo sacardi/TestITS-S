@@ -124,7 +124,7 @@ public class PKIEntities {
 	public byte[] getEnrolmentResponseFromEnrolmentCa(byte[] enrolmentMsgToSendToEnrolmentCa)
 			throws IOException, GeneralSecurityException, MessageParsingException, SignatureVerificationException,
 			DecryptionFailedException, InternalErrorException {
-		byte[] enrollmentResponse = this.enrolmentCA.enrollITS(enrolmentMsgToSendToEnrolmentCa);
+		byte[] enrollmentResponse = this.enrolmentCA.enrollITSS(enrolmentMsgToSendToEnrolmentCa);
 		return enrollmentResponse;
 	}
 

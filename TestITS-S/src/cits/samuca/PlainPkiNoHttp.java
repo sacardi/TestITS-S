@@ -31,10 +31,6 @@ public class PlainPkiNoHttp {
 
 		final String messageToSend = "AAAA";
 		sendCAM(messageToSend);
-
-		// byte[] denm = sendingITSS.getDenm("Hello".getBytes());
-
-//		pki.generateCTL();
 	}
 
 	private static void setVerbosityToShortMessages() {

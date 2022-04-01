@@ -47,26 +47,11 @@ import cits.samuca.utils.Constants;
 import cits.samuca.utils.Logger;
 import cits.samuca.utils.PkiUtilsSingleton;
 
-/**
- * They are defined in section 7.2.4, Subordinate certification authority
- * certificates.
- * 
- * <h1>CA Certificate Request</h1> In 102 941 the certificate request for the CA
- * shall be sent by an off-band mechanism (section 6.2.1). The trust is defined
- * by the EU commission document
- * 
- * @author max
- *
- */
 public class EnrolmentCA {
-	// This is the hashmap of the sending its. The Enrolment CA already knows the
-	// ITS, and it shall know the permissions,
-	// and the validity period and region.
-	public static HashMap<String, EtsiTs103097Certificate> SendingItsStations = new HashMap<String, EtsiTs103097Certificate>();
+	public static HashMap<String, EtsiTs103097Certificate> registeredItsStations = new HashMap<String, EtsiTs103097Certificate>();
 
-	// This is the list of enrolled SITS
-	public static HashMap<String, EtsiTs103097Certificate> EnrolledSendingItsStations = new HashMap<String, EtsiTs103097Certificate>();
-	// Crypto stuff that I need.
+	public static HashMap<String, EtsiTs103097Certificate> enrolledSendingItsStations = new HashMap<String, EtsiTs103097Certificate>();
+
 	private EtsiTs103097Certificate myCertificate;
 
 	private KeyPair signingKeys;
@@ -84,7 +69,6 @@ public class EnrolmentCA {
 	}
 
 	public void setCertificate(EtsiTs103097Certificate cert) {
-//		Logger.debugPrint("[enrolment CA    ] 0a) obtained certificate " + cert);
 		Logger.shortPrint("[enrolment CA    ] 0a) obtained certificate");
 		this.myCertificate = cert;
 	}
@@ -103,34 +87,11 @@ public class EnrolmentCA {
 		this.enrolmentCaChain = enrollmentCaChain;
 	}
 
-	/**
-	 * This method stores the Sending ITS-S id and its public key.
-	 * 
-	 * @param sits_ca_and_id
-	 */
-//	public void setSendingITSSId(CAandID sits_ca_and_id) {
-//		System.out.println("Received initializion data for ITS-S " + sits_ca_and_id.getMyID());
-//		SendingITSStations.put(sits_ca_and_id.getMyID(), sits_ca_and_id.getPublicKey());
-//	}
-
 	public void setSendingItssIdAndCertificate(String sendingItssId, EtsiTs103097Certificate enrolmentCredentialsCert) {
-		SendingItsStations.put(sendingItssId, enrolmentCredentialsCert);
+		registeredItsStations.put(sendingItssId, enrolmentCredentialsCert);
 	}
 
-	/**
-	 * This method enrols an ITS station
-	 * 
-	 * @param enrolmentMSgToSendToEnrolmentCA
-	 * @return the byte[] encoded enrolment response.
-	 * @throws IOException
-	 * @throws IllegalArgumentException
-	 * @throws GeneralSecurityException
-	 * @throws InternalErrorException
-	 * @throws DecryptionFailedException
-	 * @throws SignatureVerificationException
-	 * @throws MessageParsingException
-	 */
-	public byte[] enrollITS(byte[] enrolmentMSgToSendToEnrolmentCA)
+	public byte[] enrollITSS(byte[] enrolmentMSgToSendToEnrolmentCA)
 			throws IllegalArgumentException, IOException, GeneralSecurityException, MessageParsingException,
 			SignatureVerificationException, DecryptionFailedException, InternalErrorException {
 
@@ -155,14 +116,13 @@ public class EnrolmentCA {
 	private RequestVerifyResult<InnerEcRequest> decryptEnrolmentRequest(
 			EtsiTs103097DataEncryptedUnicast encryptedMessage) throws IOException, GeneralSecurityException,
 			MessageParsingException, SignatureVerificationException, DecryptionFailedException, InternalErrorException {
-		// Then create a receiver store to decrypt the message
+
 		final ETSITS102941MessagesCaGenerator messagesCaGenerator = PkiUtilsSingleton.getInstance()
 				.getMessagesCaGenerator();
 
 		Map<HashedId8, Receiver> enrolCaReceipients = messagesCaGenerator.buildRecieverStore(
 				new Receiver[] { new CertificateReciever(this.encryptionKeys.getPrivate(), this.myCertificate) });
 
-		// Now try to decrypt:
 		RequestVerifyResult<InnerEcRequest> innerEcRequest = messagesCaGenerator
 				.decryptAndVerifyEnrolmentRequestMessage(encryptedMessage, null, null, enrolCaReceipients);
 
@@ -176,11 +136,10 @@ public class EnrolmentCA {
 	private EtsiTs103097DataEncryptedUnicast createEnrolmentResponse(
 			RequestVerifyResult<InnerEcRequest> enrolmentRequestResult)
 			throws SignatureException, IOException, GeneralSecurityException {
-//		byte[] itssId = getItssId(enrolmentRequestResult);
 
 		InnerEcResponse innerEcResponse = null;
 
-		// XXX: UNCOMMENT / CHANGE -- begin
+		// TODO: UNCOMMENT / CHANGE -- begin
 		// here I should check that the itsID is one of the S-ITSS that I've already
 		// visited
 //		boolean sendingItssIsKnown = SendingItsStations.containsKey(new String(itssId));
@@ -198,15 +157,6 @@ public class EnrolmentCA {
 		return encryptedEnrolmentResponse;
 	}
 
-//	private byte[] getItssId(RequestVerifyResult<InnerEcRequest> enrolmentRequestResult) {
-//		InnerEcRequest msgRequest = enrolmentRequestResult.getValue();
-//		byte[] itsId = msgRequest.getItsId();
-//
-//		Logger.shortPrint("[enrolment CA    ] 1) The ITS id received is " + new String(itsId));
-//		// let me get the information for this ITS ID
-//		return itsId;
-//	}
-
 	private EtsiTs103097Certificate createEnrolmentCredentialForItss() throws SignatureException, IOException {
 		Logger.shortPrint("[enrolment CA    ] 1) The S-ITS-S is known, generating its certificate");
 
@@ -219,8 +169,9 @@ public class EnrolmentCA {
 		KeyPair enrollmentCredentialEncryptionKeys = cryptoManager.generateKeyPair(signingAlgorithm);
 
 		ValidityPeriod validityPeriod = new ValidityPeriod(new Date(), DurationChoices.years, 35);
-
-		GeographicRegion region = setRegionToItaly();
+		
+//		GeographicRegion region = PkiUtilsSingleton.getInstance().getGeographicRegion();
+		GeographicRegion region = null;
 
 		// THIS IS A UNIQUE ID FOR THE CERTIFICATE THAT IT WILL BE USED BY THE
 		// AA TO CHECK IF THIS CERT IS VALID (section 6.2.3.3.1)
@@ -238,6 +189,9 @@ public class EnrolmentCA {
 		PublicKey signinPublicKey = enrollmentCredentialSigningKeys.getPublic();
 		SymmAlgorithm symmetricAlgorithm = SymmAlgorithm.aes128Ccm;
 		BasePublicEncryptionKeyChoices encryptionAlgorithm = BasePublicEncryptionKeyChoices.ecdsaNistP256;
+		PublicKey signCertificatePublicKey = this.signingKeys.getPublic();
+		PrivateKey signCertificatePrivateKey = this.signingKeys.getPrivate();
+		PublicKey encryptionPublicKey = enrollmentCredentialEncryptionKeys.getPublic();
 		EtsiTs103097Certificate enrollmentCredential = enrollmentCredentialCertGenerator.genEnrollCredential(
 				certificateHolder, //
 				validityPeriod, //
@@ -246,22 +200,15 @@ public class EnrolmentCA {
 				assuranceLevel, //
 				confidenceLevel, //
 				signingAlgorithm, //
-				signinPublicKey, // signPublicKey, i.e public key in certificate
-				signerCertificate, // signerCertificate
-				this.signingKeys.getPublic(), // signCertificatePublicKey,
-				this.signingKeys.getPrivate(), //
-				symmetricAlgorithm, // symmAlgorithm
-				encryptionAlgorithm, // encPublicKeyAlgorithm
-				enrollmentCredentialEncryptionKeys.getPublic() // encryption public key
+				signinPublicKey, //
+				signerCertificate, //
+				signCertificatePublicKey, //
+				signCertificatePrivateKey, //
+				symmetricAlgorithm, //
+				encryptionAlgorithm, //
+				encryptionPublicKey 
 		);
 		return enrollmentCredential;
-	}
-
-	private GeographicRegion setRegionToItaly() {
-		List<Integer> countries = new ArrayList<Integer>();
-		countries.add(Constants.REGION_ITALY);
-		GeographicRegion region = GeographicRegion.generateRegionForCountrys(countries);
-		return region;
 	}
 
 	private InnerEcResponse createPositiveInnerEcResponse(RequestVerifyResult<InnerEcRequest> enrolmentRequestResult,
